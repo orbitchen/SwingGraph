@@ -1,6 +1,8 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -21,13 +23,38 @@ public class MyGraphics
     //说明某一形状是更小的元素，不添加至shapes
     public static final int ELEMENT=-1;
 
-    private Graphics originalGraphics;
-    private JPanel panel;
-    private JFrame frame;
+    public Graphics originalGraphics;
+    public JPanel panel;
+    public JFrame frame;
     private BufferedImage img;
 
     //保存现有的所有形状
     private HashMap<Integer,Shape> shapes=new HashMap<Integer, Shape>();
+
+    public void __debugOutput()
+    {
+        System.out.println("panel size："+panel.getWidth()+","+panel.getHeight());
+        System.out.println("img size："+img.getWidth()+","+img.getHeight());
+        System.out.println("Frame size："+frame.getWidth()+","+frame.getHeight());
+        System.out.println();
+    }
+
+    public BufferedImage getImage()
+    {
+
+        BufferedImage returnVal=new BufferedImage(img.getWidth(),img.getHeight(),BufferedImage.TYPE_INT_RGB);
+        for(int i=0;i<returnVal.getWidth();i++)
+            for(int j=0;j<returnVal.getHeight();j++)
+                returnVal.setRGB(i,j,img.getRGB(i,j));
+        return returnVal;
+    }
+
+    public void setImage(BufferedImage bi)
+    {
+        for(int i=0;i<img.getWidth();i++)
+            for(int j=0;j<img.getHeight();j++)
+                img.setRGB(i,j,bi.getRGB(i,j));
+    }
 
     private void print(String a)
     {
@@ -42,6 +69,28 @@ public class MyGraphics
         //一张RGB图片
         img=new BufferedImage(panel.getWidth(),panel.getHeight(),BufferedImage.TYPE_INT_RGB);
         clear();
+
+        frame.addComponentListener(new ComponentListener() {
+            @Override
+            public void componentResized(ComponentEvent componentEvent) {
+                resize(panel.getWidth(),panel.getHeight());
+            }
+
+            @Override
+            public void componentMoved(ComponentEvent componentEvent) {
+
+            }
+
+            @Override
+            public void componentShown(ComponentEvent componentEvent) {
+
+            }
+
+            @Override
+            public void componentHidden(ComponentEvent componentEvent) {
+
+            }
+        });
     }
 
     public void resize(int width,int height)
@@ -49,8 +98,16 @@ public class MyGraphics
         print("resize");
         //panel.resize(width,height);
         panel.setSize(new Dimension(width,height));
-        img=new BufferedImage(panel.getWidth(),panel.getHeight(),BufferedImage.TYPE_INT_RGB);
+        BufferedImage saved = getImage();
+        img = new BufferedImage(panel.getWidth(), panel.getHeight(), BufferedImage.TYPE_INT_RGB);
         clear();
+        int min_width = Math.min(saved.getWidth(), img.getWidth());
+        int min_height = Math.min(saved.getHeight(), img.getHeight());
+        for (int i = 0; i < min_width; i++) {
+            for (int j = 0; j < min_height; j++) {
+                img.setRGB(i, j, saved.getRGB(i, j));}}
+        originalGraphics=panel.getGraphics();
+        panelSync();
     }
 
     public void clear()
@@ -70,6 +127,13 @@ public class MyGraphics
         int rgb_int=originalGraphics.getColor().getRGB();
         img.setRGB(x,y,rgb_int);
         //panelSync();
+    }
+
+    public void drawPixelWrapper(int x,int y)
+    {
+        Point p=resizeEnd(x,y);
+        drawPixel(p.x,p.y);
+        panelSync();
     }
 
     //abandoned
@@ -103,6 +167,12 @@ public class MyGraphics
             s.initLine(id,originalGraphics.getColor(),x1,y1,x2,y2,"DDA");
             shapes.put(id,s);
         }
+
+        Point p_=resizeEnd(x2,y2);
+        x2=p_.x;y2=p_.y;
+
+        Point p2=resizeEnd(x1,y1);
+        x1=p2.x;y1=p2.y;
 
         //TODO:DONE
 
@@ -168,13 +238,21 @@ public class MyGraphics
 
     public void drawLineBresenham(int id,int x1,int y1,int x2,int y2)
     {
-        print("drawLineBresenham");
+
         if(id!=ELEMENT)
         {
             Shape s=new Shape();
             s.initLine(id,originalGraphics.getColor(),x1,y1,x2,y2,"Bresenham");
             shapes.put(id,s);
         }
+
+        Point p_=resizeEnd(x2,y2);
+        x2=p_.x;y2=p_.y;
+
+        Point p2=resizeEnd(x1,y1);
+        x1=p2.x;y1=p2.y;
+
+        System.out.println("drawLineBresenham:"+x2+","+y2);
 
         //TODO:DONE
         int dx,dy,sx,sy,p,dx_2,dy_2;
@@ -232,6 +310,26 @@ public class MyGraphics
         panelSync();
     }
 
+    private Point resizeEnd(int x2,int y2)
+    {
+        //重整边缘的点,
+        //TODO:目前的方法不太好。
+        Point p=new Point();
+        int x=x2,y=y2;
+        if(x2<0)
+            x=0;
+        else if(x2>=panel.getWidth())
+            x=panel.getWidth()-1;
+
+        if(y2<0)
+            y=0;
+        else if(y2>=panel.getHeight())
+            y=panel.getHeight()-1;
+
+        p.setPoint(x,y);
+        return p;
+    }
+
     public void drawPolygonDDA(int id,Point[] p)
     {
         print("drawPolygonDDA");
@@ -268,6 +366,49 @@ public class MyGraphics
 
     }
 
+    public void drawRectangle(int x1,int y1,int x2,int y2)
+    {
+        Point p1,p2;
+        p1=resizeEnd(x1,y1);p2=resizeEnd(x2,y2);
+        x1=p1.x;y1=p1.y;x2=p2.x;y2=p2.y;
+        drawLineBresenham(ELEMENT,x1,y1,x1,y2);
+        drawLineBresenham(ELEMENT,x1,y1,x2,y1);
+        drawLineBresenham(ELEMENT,x2,y2,x1,y2);
+        drawLineBresenham(ELEMENT,x2,y2,x2,y1);
+    }
+
+    public void drawDeleteRectangle(int x,int y)
+    {
+        int x1,y1,x2,y2;
+        x1=x-32;y1=y-32;
+        x2=x+32;y2=y+32;
+        Point p1,p2;
+        p1=resizeEnd(x1,y1);p2=resizeEnd(x2,y2);
+        x1=p1.x;y1=p1.y;x2=p2.x;y2=p2.y;
+        drawLineBresenham(ELEMENT,x1,y1,x1,y2);
+        drawLineBresenham(ELEMENT,x1,y1,x2,y1);
+        drawLineBresenham(ELEMENT,x2,y2,x1,y2);
+        drawLineBresenham(ELEMENT,x2,y2,x2,y1);
+        for(int i=x1;i<=x2;i++)
+        {
+            for(int j=y1;j<=y2;j++)
+                img.setRGB(i,j,0xffffff);
+        }
+        panelSync();
+    }
+
+    private void draw4Points(int x,int y,int x1,int y1)
+    {
+        //针对画椭圆的算法
+        drawPixel(x1,y1);
+        int dx=Math.abs(x-x1);
+        int dy=Math.abs(y-y1);
+        drawPixel(x+dx,y+dy);
+        drawPixel(x-dx,y+dy);
+        drawPixel(x+dx,y-dy);
+        drawPixel(x-dx,y-dy);
+    }
+
     public void drawOval(int id,int x,int y,int a,int b)
     {
         print("drawOval");
@@ -279,8 +420,23 @@ public class MyGraphics
             shapes.put(id, s);
         }
 
-        //TODO
+        //TODO:完成椭圆绘制算法。
 
+
+
+    }
+
+    public void drawOvalWrapper(int x1,int y1,int x2,int y2)
+    {
+        Point p1,p2;
+        p1=resizeEnd(x1,y1);p2=resizeEnd(x2,y2);
+        x1=p1.x;y1=p1.y;x2=p2.x;y2=p2.y;
+        int x,y,a,b;
+        x=(x1+x2)/2;
+        y=(y1+y2)/2;
+        a=Math.abs(x1-x2)/2;
+        b=Math.abs(y1-y2)/2;
+        drawOval(ELEMENT,x,y,a,b);
 
     }
 

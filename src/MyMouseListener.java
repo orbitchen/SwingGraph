@@ -1,16 +1,32 @@
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.*;
 
-public class MyMouseListener implements MouseListener {
+public class MyMouseListener implements MouseMotionListener,MouseListener {
 
     MyGraphics mg;
 
     //外围用换行符分割，内部用空格分隔即可。
     List<String> commands=new LinkedList<String>();
+
+    public static final int MODE_PENCIL=0;
+    public static final int MODE_LINE=1;
+    public static final int MODE_CIRCLE=2;
+    public static final int MODE_RECTANGLE=3;
+    public static final int MODE_DELETE=4;
+
+    private int penMode=MODE_LINE;
+
+    private int x_begin=0,y_begin=0;
+
+    BufferedImage backGround;
+
+    public void setPenMode(int mode){penMode=mode;}
 
     public void init(MyGraphics m) {mg=m;}
 
@@ -56,6 +72,7 @@ public class MyMouseListener implements MouseListener {
             {
                 printError(token,3,i);
                 mg.resize(Integer.parseInt(token[1]),Integer.parseInt(token[2]));
+                mg.clear();
             }
             else if(token[0].equals("saveCanvas"))
             {
@@ -215,12 +232,116 @@ public class MyMouseListener implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent mouseEvent) {
+        System.out.println("按下鼠标:"+mouseEvent.getX()+","+mouseEvent.getY());
+        backGround=mg.getImage();
+        x_begin=mouseEvent.getX();
+        y_begin=mouseEvent.getY();
+
+        if(penMode==MODE_LINE)
+        {
+
+        }
+        else if(penMode==MODE_CIRCLE)
+        {
+
+        }
+        else if(penMode==MODE_PENCIL)
+        {
+            mg.drawPixelWrapper(x_begin,y_begin);
+        }
+        else if(penMode==MODE_RECTANGLE)
+        {
+            //已经在上面完成
+
+        }
+        else if(penMode==MODE_DELETE)
+        {
+            //画矩形
+            //删除中间部分
+            //保存
+            mg.drawDeleteRectangle(mouseEvent.getX(),mouseEvent.getY());
+            backGround=mg.getImage();
+
+        }
 
     }
 
     @Override
     public void mouseReleased(MouseEvent mouseEvent) {
+        System.out.println("松开鼠标:"+mouseEvent.getX()+","+mouseEvent.getY());
 
+        if(penMode==MODE_LINE)
+        {
+            mg.setImage(backGround);
+            mg.drawLineBresenham(MyGraphics.ELEMENT,x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+            x_begin=y_begin=-1;
+        }
+        else if(penMode==MODE_CIRCLE)
+        {
+            mg.setImage(backGround);
+            mg.drawOvalWrapper(x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+
+        }
+        else if(penMode==MODE_PENCIL)
+        {
+            mg.drawLineDDA(MyGraphics.ELEMENT,x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+            mg.drawPixelWrapper(mouseEvent.getX(),mouseEvent.getY());
+            mg.drawPixelWrapper(x_begin,y_begin);
+            x_begin=-1;y_begin=-1;
+
+        }
+        else if(penMode==MODE_RECTANGLE)
+        {
+            mg.setImage(backGround);
+            mg.drawRectangle(x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+            x_begin=y_begin=-1;
+
+        }
+        else if(penMode==MODE_DELETE)
+        {
+            mg.setImage(backGround);
+
+        }
+
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent mouseEvent){
+
+            System.out.println("拖动鼠标:" + mouseEvent.getX() + "," + mouseEvent.getY());
+            if (penMode == MODE_LINE) {
+                mg.setImage(backGround);
+                mg.drawLineBresenham(MyGraphics.ELEMENT, x_begin, y_begin, mouseEvent.getX(), mouseEvent.getY());
+                //已经同步
+
+            }
+            else if (penMode == MODE_CIRCLE) {
+                mg.setImage(backGround);
+                mg.drawOvalWrapper(x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+            }
+            else if (penMode == MODE_PENCIL)
+            {
+                mg.drawPixelWrapper(mouseEvent.getX(),mouseEvent.getY());
+                mg.drawPixelWrapper(x_begin,y_begin);
+                mg.drawLineDDA(MyGraphics.ELEMENT,x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+                x_begin=mouseEvent.getX();
+                y_begin=mouseEvent.getY();
+            }
+            else if (penMode == MODE_RECTANGLE) {
+                mg.setImage(backGround);
+                mg.drawRectangle(x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+
+            } else if (penMode == MODE_DELETE) {
+                mg.drawDeleteRectangle(mouseEvent.getX(),mouseEvent.getY());
+                backGround=mg.getImage();
+
+            }
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent mouseEvent){
+        //System.out.println("拖动鼠标:"+mouseEvent.getX()+","+mouseEvent.getY());
     }
 
     @Override
@@ -230,6 +351,6 @@ public class MyMouseListener implements MouseListener {
 
     @Override
     public void mouseExited(MouseEvent mouseEvent) {
-
+        mg.__debugOutput();
     }
 }
