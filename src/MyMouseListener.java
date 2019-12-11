@@ -20,6 +20,12 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
     public static final int MODE_RECTANGLE=3;
     public static final int MODE_DELETE=4;
 
+    public static final int MODE_CURVE=5;
+    public static final int MODE_CURVE_ING=6;
+    Vector<Point> curvePoints=new Vector<Point>();
+    BufferedImage curveBackGround;
+    //曲线模式
+
     private int penMode=MODE_LINE;
 
     private int x_begin=0,y_begin=0;
@@ -192,7 +198,7 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
             else if(token[0].equals("scale"))
             {
                 printError(token,5,i);
-                mg.scale(Integer.parseInt(token[1]),Integer.parseInt(token[2]),Integer.parseInt(token[3]),Integer.parseInt(token[4]));
+                mg.scale(Integer.parseInt(token[1]),Integer.parseInt(token[2]),Integer.parseInt(token[3]),Float.parseFloat(token[4]));
 
             }
             else if(token[0].equals("clip"))
@@ -261,7 +267,25 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
             //保存
             mg.drawDeleteRectangle(mouseEvent.getX(),mouseEvent.getY());
             backGround=mg.getImage();
-
+        }
+        else if(penMode==MODE_CURVE)
+        {
+            curveBackGround=backGround;//保存曲线的背景图片
+        }
+        else if(penMode==MODE_CURVE_ING)
+        {
+            //如果按的是鼠标右键，结束绘制
+            if(mouseEvent.getButton()==MouseEvent.BUTTON3)
+            {
+                mg.setImage(curveBackGround);
+                mg.drawCurveBezierWrapper_Vector(curvePoints);
+                penMode=MODE_CURVE;
+            }
+            else//鼠标左键
+            {
+                mg.setImage(curveBackGround);
+                mg.drawCurveBezierWrapper_Vector_Point(curvePoints,new Point(mouseEvent.getX(),mouseEvent.getY()));
+            }
         }
 
     }
@@ -302,6 +326,19 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
             mg.setImage(backGround);
 
         }
+        else if(penMode==MODE_CURVE)
+        {
+            //第一个点在松鼠标的时候记录
+            Point p=new Point(mouseEvent.getX(),mouseEvent.getY());
+            curvePoints.add(p);
+            penMode=MODE_CURVE_ING;//进入直线绘制模式
+        }
+        else if(penMode==MODE_CURVE_ING)
+        {
+            mg.setImage(curveBackGround);
+            curvePoints.add(new Point(mouseEvent.getX(),mouseEvent.getY()));
+            mg.drawCurveBezierWrapper_Vector(curvePoints);
+        }
 
     }
 
@@ -335,6 +372,15 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
                 mg.drawDeleteRectangle(mouseEvent.getX(),mouseEvent.getY());
                 backGround=mg.getImage();
 
+            }
+            else if(penMode==MODE_CURVE)
+            {
+
+            }
+            else if(penMode==MODE_CURVE_ING)
+            {
+                mg.setImage(curveBackGround);
+                mg.drawCurveBezierWrapper_Vector_Point(curvePoints,new Point(mouseEvent.getX(),mouseEvent.getY()));
             }
 
     }

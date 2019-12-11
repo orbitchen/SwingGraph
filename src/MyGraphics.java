@@ -3,14 +3,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
-import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
-import java.nio.Buffer;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Vector;
 
 /*
 注意事项：
@@ -397,9 +393,10 @@ public class MyGraphics
         panelSync();
     }
 
-    private void draw4Points(int x,int y,int x1,int y1)
+    private void draw4Points(long x,long y,long x1,long y1)
     {
         //针对画椭圆的算法
+        /*
         drawPixel(x1,y1);
         int dx=Math.abs(x-x1);
         int dy=Math.abs(y-y1);
@@ -407,11 +404,17 @@ public class MyGraphics
         drawPixel(x-dx,y+dy);
         drawPixel(x+dx,y-dy);
         drawPixel(x-dx,y-dy);
+        */
+         drawPixel((int)(x+x1),(int)(y+y1));
+         drawPixel((int)(x+x1),(int)(y-y1));
+         drawPixel((int)(x-x1),(int)(y+y1));
+         drawPixel((int)(x-x1),(int)(y-y1));
     }
 
     public void drawOval(int id,int x,int y,int a,int b)
     {
         print("drawOval");
+        System.out.println("Oval:"+x+","+y+","+a+","+b);
         //x对应a y对应b
         //同时也是画圆的算法
         if(id!=ELEMENT) {
@@ -421,13 +424,46 @@ public class MyGraphics
         }
 
         //TODO:完成椭圆绘制算法。
-
-
-
+        //判断参数 b*b*xt>=a*a*yt
+        long xk,yk;
+        long rx,ry;
+        rx=a;ry=b;xk=0;yk=ry;
+        long rx2,ry2;
+        rx2=rx*rx;ry2=ry*ry;
+        long p=ry2-rx2*ry+rx2/4;
+        while(ry2*xk<rx2*yk)
+        {
+            draw4Points(x,y,xk,yk);
+            if(p<0) {
+                p=p+2*ry2*xk+3*ry2;
+                xk++;
+            } else{
+                p=p+2*ry2*xk-2*rx2*yk+2*rx2+3*ry2;
+                xk++;yk--;
+            }
+            //panelSync();
+        }
+        p=(long)(ry2*(xk+0.5)*(xk+0.5)+rx2*(yk-1)*(yk-1)-rx2*ry2);
+        while(yk!=0)
+        {
+            draw4Points(x,y,xk,yk);
+            if(p>0){
+                p=p-2*rx2*yk+3*rx2;
+                yk--;
+            } else {
+                p=p+2*ry2*xk-2*rx2*yk+2*ry2+3*rx2;
+                yk--;xk++;
+            }
+        }
+        //补上最后一个点
+        draw4Points(x,y,rx,0);
+        panelSync();
     }
+
 
     public void drawOvalWrapper(int x1,int y1,int x2,int y2)
     {
+        System.out.println("drawOvalWrapper");
         Point p1,p2;
         p1=resizeEnd(x1,y1);p2=resizeEnd(x2,y2);
         x1=p1.x;y1=p1.y;x2=p2.x;y2=p2.y;
@@ -452,6 +488,23 @@ public class MyGraphics
 
         //TODO
 
+    }
+
+    public void drawCurveBezierWrapper_Vector(Vector<Point> v)
+    {
+        Point[] ps=new Point[v.size()];
+        for(int i=0;i<v.size();i++)
+            ps[i]=v.get(i);
+        drawCurveBezier(ELEMENT,ps);
+    }
+
+    public void drawCurveBezierWrapper_Vector_Point(Vector<Point> v,Point p)
+    {
+        Point[] ps=new Point[v.size()+1];
+        for(int i=0;i<v.size();i++)
+            ps[i]=v.get(i);
+        ps[v.size()]=p;
+        drawCurveBezier(ELEMENT,ps);
     }
 
     public void drawCurveBspline(int id,Point[] p)
@@ -513,6 +566,7 @@ public class MyGraphics
         redrawExcept(id);
 
         //TODO:平移，之后要更改原坐标。
+        //所有的图元都要支持平移
         Shape s=shapes.get(id);
 
         if(s.type==Shape.LINE) {
@@ -554,6 +608,14 @@ public class MyGraphics
         }
     }
 
+    private void rotatePoint(int x, int y, double arc, Point p)
+    {
+        int x0=p.x;
+        int y0=p.y;
+        p.x=(int)(x+(x0-x)*Math.cos(arc)-(y0-y)*Math.sin(arc));
+        p.y=(int)(y+(x0-x)*Math.sin(arc)+(y0-y)*Math.cos(arc));
+    }
+
     public void rotate(int id,int x,int y,int r)
     {
         print("rotate");
@@ -561,7 +623,54 @@ public class MyGraphics
         redrawExcept(id);
 
         //TODO：旋转，之后要更改原坐标。
+        //除了椭圆之外都要支持旋转
+        //x y为旋转中心，r为顺时针旋转角度
+        Shape s=shapes.get(id);
+        if(s==null)
+        {
+            System.out.println("旋转时发生错误：图元不存在。");
+            return;
+        }
 
+        double arc=(Math.PI/180)*r;
+
+        if(s.type==Shape.LINE)
+        {
+            rotatePoint(x,y,arc,s.location[0]);
+            rotatePoint(x,y,arc,s.location[1]);
+            if(s.algorithm.equals("DDA"))
+                drawLineDDA(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+            else
+                drawLineBresenham(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+        }
+        else if(s.type==Shape.CURVE)
+        {
+            for(int i=0;i<s.location.length;i++)
+                rotatePoint(x,y,arc,s.location[i]);
+            if(s.algorithm.equals("Bezier"))
+                drawCurveBezier(ELEMENT,s.location);
+            else
+                drawCurveBspline(ELEMENT,s.location);
+        }
+        else if(s.type==Shape.OVAL)
+        {
+            System.out.println("试图对椭圆进行旋转。");
+        }
+        else if(s.type==Shape.POLYGON)
+        {
+            for(int i=0;i<s.location.length;i++)
+                rotatePoint(x,y,arc,s.location[0]);
+            if(s.algorithm.equals("DDA"))
+                drawPolygonDDA(ELEMENT,s.location);
+            else
+                drawPolygonBresenham(ELEMENT,s.location);
+        }
+    }
+
+    private void scalePoint(int x,int y,float ratio,Point p)
+    {
+        p.x=(int)(p.x*ratio+x*(1-ratio));
+        p.y=(int)(p.y*ratio+y*(1-ratio));
     }
 
     public void scale(int id,int x,int y,float ratio)
@@ -571,21 +680,194 @@ public class MyGraphics
         redrawExcept(id);
 
         //TODO:缩放，之后要更改原坐标。
+        //所有的图元都要支持缩放
+        Shape s=shapes.get(id);
+        if(s==null){System.out.println("缩放时发生错误：图元不存在。");}
+
+        if(s.type==Shape.LINE)
+        {
+            scalePoint(x,y,ratio,s.location[0]);
+            scalePoint(x,y,ratio,s.location[1]);
+            if(s.algorithm.equals("DDA"))
+                drawLineDDA(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+            else
+                drawLineBresenham(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+        }
+        else if(s.type==Shape.CURVE)
+        {
+            for(int i=0;i<s.location.length;i++)
+                scalePoint(x,y,ratio,s.location[i]);
+            if(s.algorithm.equals("Bezier"))
+                drawCurveBezier(ELEMENT,s.location);
+            else
+                drawCurveBspline(ELEMENT,s.location);
+        }
+        else if(s.type==Shape.OVAL)
+        {
+            scalePoint(x,y,ratio,s.location[0]);
+            drawOval(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+        }
+        else if(s.type==Shape.POLYGON)
+        {
+            for(int i=0;i<s.location.length;i++)
+                scalePoint(x,y,ratio,s.location[0]);
+            if(s.algorithm.equals("DDA"))
+                drawPolygonDDA(ELEMENT,s.location);
+            else
+                drawPolygonBresenham(ELEMENT,s.location);
+        }
 
     }
 
-    public void clipCohenSutherland(int id,int x1,int y1,int x2,int y2)
+
+    public void clipCohenSutherland(int id,int x_min,int y_min,int x_max,int y_max)
     {
         print("clipCohenSutherland");
 
         //TODO:学习算法之后完成。
+        Shape s=shapes.get(id);
+        if(s==null){System.out.println("裁剪：无法找到图元");}
+        if(s.type!=Shape.LINE){System.out.println("裁剪：试图对非线段进行裁剪");}
+        clear();
+        redrawExcept(id);
 
+        int up,down,left,right,in;
+        up=1;down=2;left=4;right=8;in=0;
+
+        int code[]=new int[2];
+        code[1] = 0;code[0]=0;
+
+        for(int i=0;i<=1;i++)
+        {
+            if(s.location[i].x<x_min)
+                code[i]|=left;
+            else if(s.location[i].x>x_max)
+                code[i]|=right;
+
+            if(s.location[i].y<y_min)
+                code[i]|=down;
+            else if(s.location[i].y>y_max)
+                code[i]|=up;
+        }
+
+        while(true)
+        {
+            if(code[0]==0&&code[1]==0)
+                break;
+
+            int code_and=code[0]&code[1];
+            if(code_and!=0)
+            {
+                //完全在界外
+                s.location[0].x=s.location[1].y=s.location[0].y=s.location[1].x=0;
+                break;
+            }
+
+            //有可能两个都在界外，也有可能只有一个在界外
+            for(int i=0;i<2;i++)
+            {
+                if(code[i]!=0)
+                {
+                    if((code[i]&up)!=0){
+                        s.location[i].y=y_max;
+                        s.location[i].x=s.location[0].x+(s.location[1].x-s.location[0].x)*(y_max-s.location[0].y)/(s.location[1].y-s.location[0].y);
+
+                    }
+                    else if((code[i]&down)!=0){
+                        s.location[i].y=y_min;
+                        s.location[i].x=s.location[0].x+(s.location[1].x-s.location[0].x)*(y_min-s.location[0].y)/(s.location[1].y-s.location[0].y);
+
+                    }
+
+                    if((code[i]&right)!=0){
+                        s.location[i].x=x_max;
+                        s.location[i].y=s.location[0].y+(s.location[1].y-s.location[0].y)*(x_max-s.location[0].x)/(s.location[1].x-s.location[0].x);
+
+                    }
+                    else if((code[i]&left)!=0){
+                        s.location[i].x=x_min;
+                        s.location[i].y=s.location[0].y+(s.location[1].y-s.location[0].y)*(x_min-s.location[0].x)/(s.location[1].x-s.location[0].x);
+
+                    }
+                }
+            }
+
+            break;
+        }
+        if(s.algorithm.equals("DDA"))
+            drawLineDDA(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+        else
+            drawLineBresenham(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
     }
 
-    public void clipLiangBarsky(int id,int x1,int y1,int x2,int y2)
+    public void clipLiangBarsky(int id,int x_min,int y_min,int x_max,int y_max)
     {
         print("clipLiangBarsky");
         //TODO:学习算法之后完成。
+
+        Shape s=shapes.get(id);
+        if(s==null){System.out.println("裁剪：无法找到图元");}
+        if(s.type!=Shape.LINE){System.out.println("裁剪：试图对非线段进行裁剪");}
+        clear();
+        redrawExcept(id);
+
+        int p[]=new int[4];
+        int q[]=new int[4];
+        p[0]=s.location[0].x-s.location[1].x;//-delta x
+        p[1]=-p[0];//delta x
+        p[2]=s.location[0].y-s.location[1].y;//-delta y
+        p[3]=-p[2];//delta y
+
+        //0  1  2  3
+        //左右下上
+
+        q[0]=s.location[0].x-x_min;
+        q[1]=x_max-s.location[0].x;
+        q[2]=s.location[0].y-y_min;
+        q[3]=y_max-s.location[0].y;
+
+        double u,u0,u1;
+        u0=0;u1=1;
+        boolean isOut=false;
+
+        for(int i=0;i<4;i++)
+        {
+            u=(double)q[i]/(double)p[i];
+            if(p[i]<0)//从外部到内部
+            {
+                u0=Math.max(u0,u);
+                if(u0>u1)
+                    isOut=true;//任何情况下只要出现这种情况即出界
+            }
+            else if(p[i]>0)//从内部到外部
+            {
+                u1=Math.max(u1,u);
+                if(u0>u1)
+                    isOut=true;
+            }
+            else if(q[i]<0)
+            {
+                //完全在界外
+                isOut=true;
+            }
+        }
+
+        if(isOut){
+            s.location[0].x=s.location[0].y=s.location[1].x=s.location[1].y=0;
+        } else {
+            int x0,y0,delta_x,delta_y;
+            x0=s.location[0].x;y0=s.location[0].y;
+            delta_x=p[1];delta_y=p[3];
+            s.location[0].x=(int)(x0+u0*delta_x);
+            s.location[0].y=(int)(y0+u0*delta_y);
+            s.location[1].x=(int)(x0+u1*delta_x);
+            s.location[1].y=(int)(y0+u1*delta_y);
+        }
+
+        if(s.algorithm.equals("DDA"))
+            drawLineDDA(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+        else
+            drawLineBresenham(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
 
     }
 

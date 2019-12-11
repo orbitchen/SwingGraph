@@ -14,7 +14,7 @@ public class LayoutInitializer {
     private JFrame frame;
 
     private JButton readButton,writeButton;
-    private JButton penPencil,penLine,penCircle,penRectangle,penDelete;
+    private JButton penPencil,penLine,penCircle,penRectangle,penDelete,penCurve;
     private JButton buttonColor,buttonWhite,buttonBlack,buttonRed,buttonGreen,buttonBlue,buttonSelectColor;
 
     private JPanel controller;
@@ -90,6 +90,13 @@ public class LayoutInitializer {
         penDelete.setPreferredSize(new Dimension(60,48));
         penDelete.setBorderPainted(false);
         controller.add(penDelete);
+
+        penCurve=new JButton();
+        penCurve.setText("曲线");
+        penCurve.setSize(60,48);
+        penCurve.setPreferredSize(new Dimension(60,48));
+        penCurve.setBorderPainted(false);
+        controller.add(penCurve);
 
         JButton blank1=new JButton();
         blank1.setSize(30,48);
@@ -234,6 +241,11 @@ public class LayoutInitializer {
             public void actionPerformed(ActionEvent actionEvent) {
                 mml.setPenMode(MyMouseListener.MODE_DELETE);
             }
+        });
+
+        penCurve.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) { mml.setPenMode(MyMouseListener.MODE_CURVE);}
         });
 
         readButton.addActionListener(new ActionListener() {

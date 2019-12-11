@@ -25,7 +25,7 @@ mml.init(mg);
 p.addMouseListener(mml);
 ```
 
-考虑到画板大小不会超过1000x1000，主界面的分辨率被设置为1280x1024，且不可更改，
+考虑到画板大小不会超过1000x1000，主界面的分辨率被设置为1280x1024，且不可更改。
 
 #### 命令解析模块相关内容：
 
@@ -144,3 +144,190 @@ $$T_0=2x_s|\Delta y|-|\Delta x|$$
 此时整个算法完成。
 
 对于剩下一种情况，将上述公式中所有的$x$和$y$互相替换即可。
+
+## 11月30日报告
+### 目前已完成的内容：
+
+1. 这次提交的重心在于图形化界面方向，预计下次提交完成所有算法；
+2. 基本完成了鼠标交互的图形化界面，并按照要求与之前的命令行交互程序做了区分。现在整个项目中同时存在两个`main`函数，分别表示命令行交互（`main`）和图形界面交互（`main_GUI`）;
+3. 算法方面，完成了椭圆的绘制算法；
+4. 对于图形化界面，完成了：
+   1. 图片读取功能，目前仅支持png格式，但是得益于java强大的框架，想要支持其他格式只需要添加几行代码；
+   2. 铅笔功能，实现这功能需要一些小技巧；
+   3. 拖动绘制直线功能。类似于windows画图，不是在松开鼠标按键的时候绘制而是在拖动鼠标的时候实时地执行擦除-绘制操作，剩下的功能也都可以进行相同的操作；
+   4. 拖动绘制矩形功能，相当于是拖动直线绘制功能的封装；
+   5. 拖动绘制椭圆功能，调用椭圆绘制算法；
+   6. 橡皮擦功能，提供一个固定大小的正方形作为画板的橡皮擦；
+   7. 颜色更改功能，随意设置所需的颜色。目前只有黑白和RGB纯色可选，后续将添加选取任意颜色的方法，输入RGB值或在RGB色图上选取点即可选取新的颜色；
+   8. 动态调整画板大小功能，与10月份提交的版本不同，现在画板大小可以任意调整，且在调整时不会发生画板被清零的情况，但是由于拖动从画板上消失的像素点不会重新出现；
+   9. 鼠标拖动的边界控制功能，使得鼠标无论怎么拖动画板上的图形都不会出界。
+
+#### 图形化界面与鼠标交互相关内容：
+1. 考虑到项目需要同时接收鼠标按下操作，抬起操作，与拖动操作，所以`MyMouseListener`类同时继承了`MouseMotionListener`和`MouseListener`的接口；
+```java
+public class MyMouseListener implements MouseMotionListener,MouseListener
+```
+2. 使用了一个新的类`LayoutInitializer`用于处理按钮与逻辑的绑定。按钮的生成在画布显示之前，而鼠标侦听器的生成在画布显示之后，所以按钮的绑定在画布的生成之后。这个顺序是唯一需要注意的点；
+3. 使用了java自带的`JFileChooser`生成窗口进行文件选择。使用这个窗口有利于跨平台。
+
+```java
+JFileChooser jf=new JFileChooser();
+jf.setFileSelectionMode(JFileChooser.FILES_ONLY);
+jf.setMultiSelectionEnabled(false);
+jf.showOpenDialog(mml.mg.frame);
+File f=jf.getSelectedFile();
+```
+
+4. 对于铅笔的操作，直接在拖动侦测中画一个点是不行的，因为主循环的速度肯定要慢于鼠标移动一个像素的速度。解决方法就是在拖动侦测中绘制上一次记录的点A和鼠标所在点之间的直线，并把鼠标所在点赋给A；
+```java
+@Override
+public void mouseDragged(MouseEvent mouseEvent){
+    //省略
+    else if (penMode == MODE_PENCIL)
+    {
+        mg.drawPixelWrapper(mouseEvent.getX(),mouseEvent.getY());
+        mg.drawPixelWrapper(x_begin,y_begin);
+        mg.drawLineDDA(MyGraphics.ELEMENT,x_begin,y_begin,mouseEvent.getX(),mouseEvent.getY());
+        x_begin=mouseEvent.getX();
+        y_begin=mouseEvent.getY();
+    }
+    //省略
+}    
+```
+5. 如何实现在鼠标拖动过程中动态实现擦除-绘制功能是一个难点。在11月的提交中暂且采用最笨的方法，在按下鼠标的时候保存现在的图片，在拖动时将保存的图片写入画板并重新绘制新的图元。
+```java
+if (penMode == MODE_LINE) {
+    mg.setImage(backGround);
+    mg.drawLineBresenham(MyGraphics.ELEMENT, x_begin, y_begin, mouseEvent.getX(), mouseEvent.getY());
+    //已经同步
+}
+```
+
+#### 算法相关内容
+本次完成了椭圆绘制算法。剩下的所有算法将会在下一次更新中实现，届时可以进行测试。
+考虑一个中心点在原点的椭圆。将椭圆的标准方程化为一个参数方程：
+$$f(x,y)=r_y^2x^2+r_x^2y^2-r_x^2r_y^2$$
+显然，当$(x,y)$在椭圆上时，$f(x,y)=0$。所以通过特殊点代入可知，当$f(x,y)<0$时，某点位于椭圆内部；当$f(x,y)>0$时，某点位于椭圆外部。$f(x,y)$将作为算法的判断依据。
+椭圆是轴对称和中心对称的，所以只需要画四分之一即可。算法中选取第一象限绘制。
+通过画直线的经验，可以知道当线条在$x$方向较为平缓时，应使用$x$作为循环单位，否则使用$y$作为循环单位。这在椭圆中形成了一个分割点，在分割点的两边分别要以$x$和$y$作为循环元。椭圆上顶点的$|k|=0$，右顶点的$|k|=+\infty$，其中$k$是椭圆切线的斜率。考虑到斜率变化是连续的，所以分割点左边（靠近上顶点）一定使用$x$作为循环元，右边（靠近右顶点）一定使用$y$作为循环元。同时在切割点处$|k|=1$（$k=-1$）。
+
+现在考虑以x为循环元的情况。
+令决策参数为p。考虑已经选取点$(x_0,y_0)$，现有两个候选点$(x_0+1,y_0)$和$(x_0+1,y_0-1)$。这两个候选点的中点若在椭圆外部，则选取更接近椭圆外部的点$(x_0+1,y_0)$，否则选择$(x_0+1,y_0-1)$。所以选取$p=f(x_0+1,y_0-\frac{1}{2})$。当$p>0$时，中点更靠近椭圆外侧，所以选取候选点$(x_0+1,y_0)$，否则选取候选点$(x_0+1,y_0-1)$。
+考虑算法中的情况。当绘制某个点$(x_0,y_0)$时，$p=f(x_0+1,y_0-\frac{1}{2})$，因为在上一轮循环中，当前的点已经被确定，同时用于处理下一个点的$p$也已经被计算得出。所以先根据$p$选择一个点。当选择外侧的点时：
+$$p_{after}-p_{before}=f(x_0+2,y_0-\frac{1}{2})-f(x_0+1,y_0-\frac{1}{2})$$
+经过化简之后：
+$$p_{after}-p_{before}=2r_y^2x_0+3r_y^2$$
+当选择内侧的点时：
+$$p_{after}-p_{before}=f(x_0+2,y_0-\frac{3}{2})-f(x_0+1,y_0-\frac{1}{2})$$
+经过化简之后：
+$$p_{after}-p_{before}=2r_y^2x_0-2r_x^2y_0+2r_x^2+3r_y^2$$
+这就得出了椭圆第一部分的递推公式。
+
+现考虑以y为循环元的情况。首先要确定一个新的$p$。新的$p$通过第一阶段最后的点得出，代入原公式$p=f(x_0+1,y_0-\frac{1}{2})$即可。
+同理，考虑算法中的情况。当绘制点$(x_0,y_0)$时，$p=f(x_0+\frac{1}{2},y_0-1)$。当$p>0$时，选取更接近外侧的点$(x_0+1.y_0-1)$，否则选取更靠近内侧的点$(x_0,y_0-1)$。
+当需要选取$(x_0+1,y_0-1)$时：
+$$p_{after}-p_{before}=f(x_0+\frac{3}{2},y_0-2)-f(x_0+\frac{1}{2},y_0)$$
+经过化简之后：
+$$p_{after}-p_{before}=-2r_x^2y_0+3r_x^2$$
+当需要选取$(x_0,y_0-1)$时：
+$$p_{after}-p_{before}=f(x_0+\frac{1}{2},y_0-2)-f(x_0+\frac{1}{2},y_0)$$
+经过化简之后：
+$$p_{after}-p_{before}=-2r_x^2y_0+3r_x^2+2r_y^2x_0+2r_y^2$$
+这样就完成了椭圆的绘制算法。
+
+相比于直线，椭圆的算法反而更加简单一些，因为椭圆的算法只需要考虑一种情况，甚至对于$r_x>r_y$情况和$r_x<r_y$的情况是相同的。直线的算法反而要考虑8种情况及它们的合并化简。
+
+## 12月31日报告
+### 目前已完成的内容
+
+
+#### 算法相关内容
+
+##### 1. 图形变换
+首先完成了图形“形变”相关内容：平移，缩放，旋转。这部分主要是数学上的内容，将关键点进行坐标变换即可。
+
+对于平移，将图形的关键点加上相应的$\Delta x$和$\Delta y$即可。
+
+对于缩放，对于每一个关键点，可以从坐标系非常直观地理解以下公式：
+$$x=x_0+r(x-x_0)$$ $$y=y_0+r(y-y_0)$$
+其中$(x_0,y_0)$是缩放中心点，$(x,y)$是缩放目标关键点，$r$是缩放比率。在算法中做这样的变换即可。
+
+旋转是三个变换中最为复杂的一个。考虑一个二维旋转矩阵：
+
+$$\left[ \begin{matrix}
+cos\theta & -sin\theta \\
+sin\theta & cos\theta
+\end{matrix} \right]$$
+
+令$(x_1,y_1)$为旋转之后的点，$(x_0,y_0)$为旋转之前的点，$(x,y)$为旋转中心点。则有下面的公式：
+$$ \left[ \begin{matrix} x_1 \\ y_1 \end{matrix} \right] =
+\left[ \begin{matrix} x \\ y \end{matrix} \right] +
+\left[ \begin{matrix}
+cos\theta & -sin\theta \\
+sin\theta & cos\theta
+\end{matrix} \right]
+\left[ \begin{matrix} x_0-x \\ y_0-y \end{matrix} \right]
+$$
+
+经过化简之后可以得到以下的公式：
+$$x_1=x+(x_0-x)cos\theta-(y_0-y)sin\theta$$ $$y_1=y+(x_0-x)sin\theta+(y_0-y)cos\theta$$这就是旋转变换中对关键点所使用的公式。
+
+##### 2. 线段裁剪
+这次提交中也完成了两个线段裁剪算法：Cohen-Sutherland算法（简称CS算法）和Liang_Barsky算法（简称LB算法）。这两个算法涉及数学的部分相对较少。
+
+CS算法的创新之处在于使用了位运算来得到线段端点的位置信息。以裁剪区域为标准，上下左右和中间分别赋予一个二进制编码来标注位置信息，要求五个编码相同位置的二进制比特不同。在大多数算法实现中，上下左右分别赋予0001,0010,0100,1000中的一个，而中间，也就是裁剪区域，赋予0000。这样，这个画布就被分为9个部分，每个部分都有各自的独特的编码。
+分配编码之后要确定线段两个端点的编码信息，也就是位置信息。对于每个端点的$x$坐标，若其小于$x_{min}$，则其编码相应位置（对应左边区域的位置）置为1。若其大于$x_{max}$，则其编码相应位置（对应右边区域的位置）置为1。对于y坐标也要做相同的处理。
+```java
+for(int i=0;i<=1;i++)
+    {
+        if(s.location[i].x<x_min)
+            code[i]|=left;
+        else if(s.location[i].x>x_max)
+            code[i]|=right;
+
+        if(s.location[i].y<y_min)
+            code[i]|=down;
+        else if(s.location[i].y>y_max)
+            code[i]|=up;
+    }
+```
+
+现在得到了两个端点的位置编码。第一种情况，如果`code[0]==0&&code[1]==0`，那么表明两个端点都在裁剪区域内部，不用对线段进行任何处理；第二种情况，如果`code[0]&code[1]!=0`，也就是说`code[0]&code[1]`中存在为1的比特，存在一个裁剪区域的某个方向，使得两个端点都在相同的方向，那么线段完全在裁剪区域之外，此时要进行相应的处理。
+第三种情况，也就是最广泛的情况。在以上两种情况都不成立的情况下，对于两个端点，遍历四个方向，每次遍历时将相应的端点缩减到方向边缘,也就是求解线段和相应方向边缘的交点，然后把这个交点赋给相应的端点。这是CS算法中最为耗时的一部分，需要整数和浮点数的乘除法。
+```java
+for(int i=0;i<2;i++)
+    {
+        if(code[i]!=0)
+        {
+            if((code[i]&up)!=0){
+                s.location[i].y=y_max;
+                s.location[i].x=s.location[0].x+(s.location[1].x-s.location[0].x)*(y_max-s.location[0].y)/(s.location[1].y-s.location[0].y);
+            }
+            else if((code[i]&down)!=0){
+                s.location[i].y=y_min;
+                s.location[i].x=s.location[0].x+(s.location[1].x-s.location[0].x)*(y_min-s.location[0].y)/(s.location[1].y-s.location[0].y);
+            }
+
+            if((code[i]&right)!=0){
+                s.location[i].x=x_max;
+                s.location[i].y=s.location[0].y+(s.location[1].y-s.location[0].y)*(x_max-s.location[0].x)/(s.location[1].x-s.location[0].x);
+            }
+            else if((code[i]&left)!=0){
+                s.location[i].x=x_min;
+                s.location[i].y=s.location[0].y+(s.location[1].y-s.location[0].y)*(x_min-s.location[0].x)/(s.location[1].x-s.location[0].x);
+            }
+        }
+    }
+```
+
+CS算法就此完成。可以看到，CS算法在某种程度上还是需要大量复杂的运算。
+
+LB算法的整体思路是利用直线的参数方程，取得线段与裁剪区域的两个交点的参数`u0`和`u1`，将参数代入参数方程得到新的端点从而重绘直线。
+令$(x_1,y_1)$，$(x_2,y_2)$为线段的两个端点，$\Delta x=x_2-x_1$，$\Delta y=y_2-y_1$。
+则有直线的参数方程：
+$$x=x_1+u\Delta x$$ $$y=y_1+u\Delta y$$ 其中$u$为参数，取值范围为$[0,1]$。
+
+当$u$满足下列不等式时，相应的部分线段在裁剪区域内：
+$$x_{min}\leq x_1+u\Delta x \leq x_{max}$$ $$y_{min}\leq y_1+u\Delta y \leq y_{max}$$
+上述不等式可以统一为一种形式：
+$$up_i\leq q_i , i=1,2,3,4$$

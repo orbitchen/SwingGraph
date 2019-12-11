@@ -1,13 +1,6 @@
-resetCanvas 101 101
+resetCanvas 100 100
 setColor 255 0 0
-drawLine 1 0 0 100 50 Bresenham
-saveCanvas output_1
-setColor 0 255 0
-drawLine 2 0 0 50 100 Bresenham
-saveCanvas output_2
-setColor 0 0 255
-drawLine 3 0 50 100 0 Bresenham
-saveCanvas output_3
-setColor 255 255 12
-drawLine 4 0 100 50 0 Bresenham
-saveCanvas output_4
+drawLine 1 0 0 75 75 DDA
+saveCanvas test1
+clip 1 25 25 50 50 Liang-Barsky
+saveCanvas test2
