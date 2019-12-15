@@ -296,5 +296,51 @@ public class LayoutInitializer {
 
             }
         });
+
+        writeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                JFileChooser jf=new JFileChooser();
+                jf.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                jf.setMultiSelectionEnabled(false);
+                jf.showSaveDialog(mml.mg.frame);
+                File f=jf.getSelectedFile();
+                try
+                {
+                    if(f!=null)
+                    {
+                        String fs=f.getName();
+                        String[] formats=ImageIO.getWriterFormatNames();
+                        boolean formatSupport=false;
+                        for(int i=0;i<formats.length;i++)
+                        {
+                            if(formats[i].equals(fs.split("\\.")[1])) {
+                                formatSupport = true;
+                                break;
+                            }
+                        }
+                        if(!formatSupport)
+                        {
+                            //选择了不支持的文件格式
+                            JOptionPane.showConfirmDialog(mml.mg.frame,"选择了不支持的文件格式。","错误",JOptionPane.DEFAULT_OPTION);
+                            return;
+                        }
+
+                        /*BufferedImage bi=ImageIO.read(f);
+                        mml.mg.panel.setSize(bi.getWidth(),bi.getHeight());
+                        mml.mg.resize(bi.getWidth(),bi.getHeight());
+                        mml.mg.setImage(bi);
+                        mml.mg.panelSync();*/
+                        mml.mg.save(f.getAbsolutePath(),fs.split("\\.")[1]);
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+
+                }
+            }
+        });
     }
 }

@@ -94,6 +94,7 @@ public class MyGraphics
     public void resize(int width,int height)
     {
         print("resize");
+        Color c=originalGraphics.getColor();
         //panel.resize(width,height);
         panel.setSize(new Dimension(width,height));
         BufferedImage saved = getImage();
@@ -105,6 +106,7 @@ public class MyGraphics
             for (int j = 0; j < min_height; j++) {
                 img.setRGB(i, j, saved.getRGB(i, j));}}
         originalGraphics=panel.getGraphics();
+        originalGraphics.setColor(c);
         panelSync();
     }
 
@@ -149,6 +151,19 @@ public class MyGraphics
         //保存为bmp格式
         try{
             ImageIO.write(img,"bmp",new File(name+".bmp"));
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public void save(String name,String format)
+    {
+        System.out.println("用任意格式保存");
+        //在之前要确保格式正确。
+        try{
+            ImageIO.write(img,format,new File(name));
         }
         catch (Exception e)
         {
