@@ -259,9 +259,25 @@ public class LayoutInitializer {
                 if(f!=null)
                 {
                     String fs=f.getName();
+                    /*
                     if(!"bmp".equals(fs.split("\\.")[1]))
                     {
                         System.out.println("选择了非支持的图片文件");
+                    }
+                     */
+                    //读取所有可能支持的文件格式
+                    String[] formats=ImageIO.getReaderFormatNames();
+                    boolean formatSupport=false;
+                    for(int i=0;i<formats.length;i++)
+                    {
+                        if(formats[i].equals(fs.split("\\.")[1]))
+                            formatSupport=true;
+                    }
+                    if(!formatSupport)
+                    {
+                       //选择了不支持的文件格式
+                        JOptionPane.showConfirmDialog(mml.mg.frame,"选择了不支持的文件格式。","错误",JOptionPane.DEFAULT_OPTION);
+                        return;
                     }
 
                     try{
@@ -269,6 +285,7 @@ public class LayoutInitializer {
                         mml.mg.panel.setSize(bi.getWidth(),bi.getHeight());
                         mml.mg.resize(bi.getWidth(),bi.getHeight());
                         mml.mg.setImage(bi);
+                        mml.mg.panelSync();
                     }
                     catch(Exception e)
                     {

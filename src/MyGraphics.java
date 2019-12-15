@@ -1,3 +1,5 @@
+import Jama.Matrix;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -116,7 +118,7 @@ public class MyGraphics
                 img.setRGB(x,y,0xffffff);
     }
 
-    private void panelSync() {originalGraphics.drawImage(img,0,0,null);}
+    public void panelSync() {originalGraphics.drawImage(img,0,0,null);}
 
     private void drawPixel(int x,int y)
     {
@@ -232,6 +234,84 @@ public class MyGraphics
 
     }
 
+    private void drawLineDDA_noSync(int id,int x1,int y1,int x2,int y2)
+    {
+    print("drawLineDDA");
+    if(id!=ELEMENT)
+    {
+        Shape s=new Shape();
+        s.initLine(id,originalGraphics.getColor(),x1,y1,x2,y2,"DDA");
+        shapes.put(id,s);
+    }
+
+    Point p_=resizeEnd(x2,y2);
+    x2=p_.x;y2=p_.y;
+
+    Point p2=resizeEnd(x1,y1);
+    x1=p2.x;y1=p2.y;
+
+    //TODO:DONE
+
+    //斜率
+    double k=((double)y1-(double)y2)/((double)x1-(double)x2);
+    double k_abs=Math.abs(k);
+
+    if(k_abs<=1)
+    {
+        int x_L,y_L,x_R,y_R;
+        if(x1<x2)
+        {
+            x_L=x1;
+            y_L=y1;
+            x_R=x2;
+            y_R=y2;
+        }
+        else
+        {
+            x_L=x2;
+            y_L=y2;
+            x_R=x1;
+            y_R=y1;
+        }
+        int x_k=x_L;
+        double y_k=y_L;
+        for(;x_k<=x_R;x_k++)
+        {
+            drawPixel(x_k,(int)Math.round(y_k));
+            y_k=y_k+k;
+        }
+
+    }
+    else
+    {
+        int x_up,y_up,x_down,y_down;
+        if(y1<y2)
+        {
+            x_up=x1;
+            y_up=y1;
+            x_down=x2;
+            y_down=y2;
+
+        }
+        else
+        {
+            x_up=x2;
+            y_up=y2;
+            x_down=x1;
+            y_down=y1;
+        }
+        int y_k=y_up;
+        double x_k=x_up;
+        for(;y_k<=y_down;y_k++)
+        {
+            drawPixel((int)Math.round(x_k),y_k);
+            x_k=x_k+1/k;
+        }
+    }
+    //panelSync();
+
+}
+
     public void drawLineBresenham(int id,int x1,int y1,int x2,int y2)
     {
 
@@ -248,7 +328,7 @@ public class MyGraphics
         Point p2=resizeEnd(x1,y1);
         x1=p2.x;y1=p2.y;
 
-        System.out.println("drawLineBresenham:"+x2+","+y2);
+        System.out.println("drawLineBresenham:"+x1+","+y1+","+x2+","+y2);
 
         //TODO:DONE
         int dx,dy,sx,sy,p,dx_2,dy_2;
@@ -273,7 +353,7 @@ public class MyGraphics
             //p=-dx;//存在偏差
             p=2*sx*dy-dx;
             int x=x1,y=y1;
-            for(;x!=x2;x+=sx)
+            for(;x!=x2+sx;x+=sx)
             {
                 drawPixel(x,y);
                 if(p<=0)
@@ -283,14 +363,15 @@ public class MyGraphics
                     y+=sy;
                 }
             }
-            drawPixel(x2,y2);
+            //drawPixel(x1,y1);
+            //drawPixel(x2,y2);
         }
         else
         {
             //p=-dy;
             p=2*sy*dx-dy;
             int x=x1,y=y1;
-            for(;y!=y2;y+=sy)
+            for(;y!=y2+sy;y+=sy)
             {
                 drawPixel(x,y);
                 if(p<0){
@@ -300,10 +381,90 @@ public class MyGraphics
                     x+=sx;
                 }
             }
-            drawPixel(x2,y2);//收尾
+            //drawPixel(x1,y1);
+            //drawPixel(x2,y2);//收尾
         }
 
         panelSync();
+    }
+
+    private void drawLineBresenham_noSync(int id,int x1,int y1,int x2,int y2)
+    {
+
+        //弃用：存在无法解决的问题。
+        if(id!=ELEMENT)
+        {
+            Shape s=new Shape();
+            s.initLine(id,originalGraphics.getColor(),x1,y1,x2,y2,"Bresenham");
+            shapes.put(id,s);
+        }
+
+        Point p_=resizeEnd(x2,y2);
+        x2=p_.x;y2=p_.y;
+
+        Point p2=resizeEnd(x1,y1);
+        x1=p2.x;y1=p2.y;
+
+        //System.out.println("drawLineBresenham:"+x2+","+y2);
+
+        //TODO:DONE
+        int dx,dy,sx,sy,p,dx_2,dy_2;
+        dx=Math.abs(x2-x1);dy=Math.abs(y2-y1);
+        sx=(x2>x1)?1:-1;
+        sy=(y2>y1)?1:-1;
+        dx_2=dx*2;dy_2=dy*2;
+        if(x1==x2)
+        {
+            int y_min=Math.min(y1,y2),y_max=Math.max(y1,y2);
+            for(int i=y_min;i<=y_max;i++)
+                drawPixel(x1,i);
+        }
+        else if(y1==y2)
+        {
+            int x_min=Math.min(x1,x2),x_max=Math.max(x1,x2);
+            for(int i=x_min;i<=x_max;i++)
+                drawPixel(i,y1);
+        }
+        else if(Math.abs(dx)>Math.abs(dy))
+        {
+            //p=-dx;//存在偏差
+            //p=2*sx*dy-dx;
+            p=2*sx*dy-sy*dx;
+            int x=x1,y=y1;
+            for(;x!=x2+sx;x+=sx)
+            {
+                drawPixel(x,y);
+                if(p<=0)
+                    p=p+dy_2;
+                else{
+                    p=p+dy_2-dx_2;
+                    y+=sy;
+                }
+            }
+            //drawPixel(x1,y1);
+            //drawPixel(x2,y2);
+        }
+        else
+        {
+            //p=-dy;
+            //p=2*sy*dx-dy;
+            p=2*sy*dx-sx*dy;
+            int x=x1,y=y1;
+            for(;y!=y2+sy;y+=sy)
+            {
+                drawPixel(x,y);
+                if(p<0){
+                    p=p+dx_2;
+                } else{
+                    p=p+dx_2-dy_2;
+                    x+=sx;
+                }
+            }
+            //drawPixel(x1,y1);
+            //drawPixel(x2,y2);//收尾
+        }
+
+        //panelSync();
     }
 
     private Point resizeEnd(int x2,int y2)
@@ -486,7 +647,34 @@ public class MyGraphics
             shapes.put(id, s);
         }
 
-        //TODO
+        //TODO:任意次的贝塞尔曲线
+        if(p.length<2)
+            return;//画不成
+
+        double[] xarray=new double[p.length-1];
+        double[] yarray=new double[p.length-1];
+        double x,y;
+        x=p[0].x;y=p[0].y;
+
+        for(double t=0;t<=1;t+=0.05/p.length) {
+            //步长可以调整
+            for (int i = 1; i < p.length; i++) {
+                for (int j = 0; j < p.length - i; j++) {
+                    if (i == 1) {
+                        xarray[j] = p[j].x * (1 - t) + p[j + 1].x * t;
+                        yarray[j] = p[j].y * (1 - t) + p[j + 1].y * t;
+                        continue;
+                    } else {
+                        xarray[j] = xarray[j] * (1 - t) + xarray[j + 1] * t;
+                        yarray[j] = yarray[j] * (1 - t) + yarray[j + 1] * t;
+                    }
+                }
+            }
+            drawLineDDA_noSync(ELEMENT, (int) x, (int) y, (int) xarray[0], (int) yarray[0]);
+            x=xarray[0];y=yarray[0];
+        }
+        //算法结束
+        panelSync();
 
     }
 
@@ -507,6 +695,7 @@ public class MyGraphics
         drawCurveBezier(ELEMENT,ps);
     }
 
+
     public void drawCurveBspline(int id,Point[] p)
     {
         print("drawCurveBspline");
@@ -517,7 +706,45 @@ public class MyGraphics
             shapes.put(id, s);
         }
 
-        //TODO
+        //TODO:只需要考虑三次均匀曲线
+
+        double[][] M4_pre=new double[4][4];
+        M4_pre[0][0]=1;M4_pre[0][1]=4;M4_pre[0][2]=1;M4_pre[0][3]=0;
+        M4_pre[1][0]=-3;M4_pre[1][1]=0;M4_pre[1][2]=3;M4_pre[1][3]=0;
+        M4_pre[2][0]=3;M4_pre[2][1]=-6;M4_pre[2][2]=3;M4_pre[2][3]=0;
+        M4_pre[3][0]=-1;M4_pre[3][1]=3;M4_pre[3][2]=-3;M4_pre[3][3]=1;
+        Matrix M4=new Matrix(M4_pre);
+        M4=M4.times(1.0/6.0);
+
+        boolean init=true;
+        int x=0;int y=0;
+
+        for(int i=0;i<p.length-3;i++)
+        {
+            double[][] d_pre={{p[i].x,p[i].y},{p[i+1].x,p[i+1].y},{p[i+2].x,p[i+2].y},{p[i+3].x,p[i+3].y}};
+            Matrix d=new Matrix(d_pre);
+            for(double t=0;t<=1;t+=1.0/128.0)
+            {
+                double[][] t_pre={{1,t,t*t,t*t*t}};
+                Matrix t_matrix=new Matrix(t_pre);
+                Matrix result=t_matrix.times(M4);
+                result=result.times(d);
+                if(init)
+                {
+                    x=(int)result.get(0,0);
+                    y=(int)result.get(0,1);
+                    init=false;
+                }
+                else
+                {
+                    drawLineDDA_noSync(ELEMENT,x,y,(int)result.get(0,0),(int)result.get(0,1));
+                    x=(int)result.get(0,0);
+                    y=(int)result.get(0,1);
+                }
+            }
+
+        }
+        panelSync();
 
     }
 

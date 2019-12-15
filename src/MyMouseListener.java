@@ -242,6 +242,7 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
         backGround=mg.getImage();
         x_begin=mouseEvent.getX();
         y_begin=mouseEvent.getY();
+        System.out.println("笔模式："+penMode);
 
         if(penMode==MODE_LINE)
         {
@@ -270,22 +271,18 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
         }
         else if(penMode==MODE_CURVE)
         {
+            System.out.println("MODE_CURVE_PRESS");
             curveBackGround=backGround;//保存曲线的背景图片
         }
         else if(penMode==MODE_CURVE_ING)
         {
             //如果按的是鼠标右键，结束绘制
-            if(mouseEvent.getButton()==MouseEvent.BUTTON3)
-            {
-                mg.setImage(curveBackGround);
-                mg.drawCurveBezierWrapper_Vector(curvePoints);
-                penMode=MODE_CURVE;
-            }
-            else//鼠标左键
-            {
+
+
+                System.out.println("MODE_CURVE_ING_PRESS_LEFT");
                 mg.setImage(curveBackGround);
                 mg.drawCurveBezierWrapper_Vector_Point(curvePoints,new Point(mouseEvent.getX(),mouseEvent.getY()));
-            }
+
         }
 
     }
@@ -293,6 +290,7 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
     @Override
     public void mouseReleased(MouseEvent mouseEvent) {
         System.out.println("松开鼠标:"+mouseEvent.getX()+","+mouseEvent.getY());
+        System.out.println("笔模式："+penMode);
 
         if(penMode==MODE_LINE)
         {
@@ -335,9 +333,20 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
         }
         else if(penMode==MODE_CURVE_ING)
         {
-            mg.setImage(curveBackGround);
-            curvePoints.add(new Point(mouseEvent.getX(),mouseEvent.getY()));
-            mg.drawCurveBezierWrapper_Vector(curvePoints);
+            if(mouseEvent.getButton()==MouseEvent.BUTTON3)
+            {
+                System.out.println("MODE_CURVE__ING_PRESS_RIGHT");
+                mg.setImage(curveBackGround);
+                mg.drawCurveBezierWrapper_Vector_Point(curvePoints,new Point(mouseEvent.getX(),mouseEvent.getY()));
+                penMode=MODE_CURVE;
+                curvePoints.clear();
+                curveBackGround=mg.getImage();
+            }
+            else {
+                mg.setImage(curveBackGround);
+                curvePoints.add(new Point(mouseEvent.getX(), mouseEvent.getY()));
+                mg.drawCurveBezierWrapper_Vector(curvePoints);
+            }
         }
 
     }

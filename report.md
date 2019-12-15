@@ -331,3 +331,26 @@ $$x=x_1+u\Delta x$$ $$y=y_1+u\Delta y$$ 其中$u$为参数，取值范围为$[0,
 $$x_{min}\leq x_1+u\Delta x \leq x_{max}$$ $$y_{min}\leq y_1+u\Delta y \leq y_{max}$$
 上述不等式可以统一为一种形式：
 $$up_i\leq q_i , i=1,2,3,4$$
+按照上述不等式，$p$，$q$的值分别为：
+$$p_0=-\Delta x,p_1=\Delta x,p_2=-\Delta y,p_3=\Delta y$$ $$q_0=x_1-x_{min},q_1=x_{max}-x_1,q_2=y_1-y_{min},q_3=y_{max}-y_1$$  在接下来的部分中，大部分的参考资料都表示是用“线段从内部到外部”和“线段从外部到内部”进行区分的，这让人十分费解。
+实际上，当$p_i<0,\Delta x>0$时，从
+$$x_{min}\leq x_1+u\Delta x \leq x_{max}$$ $$y_{min}\leq y_1+u\Delta y \leq y_{max}$$ 可以发现，$p_i<0$实际上是要把
+$$x_{min}\leq x_1+u\Delta x$$ $$y_{min}\leq y_1+u\Delta y$$ 这部分的比较化为统一的形式。当$\Delta x<0$时，则是要把max的一边化为统一的形式。
+定义$u_i=\frac{q_i}{p_i}$，四个$u$分别是线段与裁剪四个边界所在直线的交点的线段参数，这点不难理解，所以$u$即为下文中所说的候选值。定义$u_0,u_1$，分别表明线段靠近$(x_1,y_1)$一端与裁剪边界的交点和远离$(x_1,y_1)$一端与裁剪边界的交点。
+由参数的定义可以看到$u_0<u_1$。对于$u_0$，它再小也不可能小于0，但是可以比0更大，所以$u_0$取初始值0，每次与候选值做`max`操作。对于$u_1$，它再大也不可能大于1，但是可以比1更小，所以$u_1$的初始值取1，每次与候选值做`min`操作。
+由$$x_{min}\leq x_1+u\Delta x \leq x_{max}$$ $$y_{min}\leq y_1+u\Delta y \leq y_{max}$$可以得到4个不等式，其中两个的形状是$u\leq ...$，不难理解这就是$u_1$的候选值，另外两个的形状是$u\geq ...$，是$u_0$的候选值。
+对于$\Delta x$，当$\Delta x>0$时有
+$$u\geq \frac{x_1-x_{min}}{-\Delta x}=\frac{q_0}{p_0},u\leq \frac{x_{max}-x_1}{\Delta x}=\frac{q_1}{p_1}$$
+否则
+$$u\leq \frac{x_1-x_{min}}{-\Delta x}=\frac{q_0}{p_0},u\geq \frac{x_{max}-x_1}{\Delta x}=\frac{q_1}{p_1}$$
+对于$\Delta y$，当$\Delta y>0$时有
+$$u\geq \frac{y_1-y_{min}}{-\Delta y}=\frac{q_2}{p_2},u\leq \frac{y_{max}-y_1}{\Delta y}=\frac{q_3}{p_3}$$
+否则
+$$u\leq \frac{y_1-y_{min}}{-\Delta y}=\frac{q_2}{p_2},u\geq \frac{y_{max}-y_1}{\Delta y}=\frac{q_3}{p_3}$$
+总结一下，若某个$p_i>0$，则相应的$u_i$作为$u_1$的候选值，否则若某个$p_i<0$，则相应的$u_i$作为$u_0$的候选值。
+特殊情况是当某个$p_i=0$时的情况。此时若$q_i<0$则不难判定线段完全在界外，否则可以判定线段相应的一段在界内，无需处理。
+任何时候出现了$u_0>u_1$时都可以断定线段完全在裁剪区域外。举例来说，正常画一条经过裁剪区域的线段，会发现$u_0$的所有候选值小于$u_1$的所有候选值。
+之后将$u_0,u_1$代入参数方程，得到交点画线即可。LB算法结束。
+
+可以看到LB算法相比CS算法，算式更为简单。
+CS算法最多需要8次浮点数乘除法，最少需要4次浮点数乘除法。而LB算法最多需要4次浮点数除法。

@@ -1,6 +1,5 @@
 resetCanvas 100 100
 setColor 255 0 0
-drawLine 1 0 0 75 75 DDA
-saveCanvas test1
-clip 1 25 25 50 50 Liang-Barsky
-saveCanvas test2
+drawCurve 1 6 Bezier
+0 0 10 10 20 10 10 20 50 50 45 80
+saveCanvas Curve2
