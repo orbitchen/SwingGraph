@@ -43,7 +43,7 @@ public class LayoutInitializer {
         controller.add(readButton);
 
         writeButton=new JButton();
-        writeButton.setText("保存为");
+        writeButton.setText("保存文件");
         writeButton.setSize(100,48);
         writeButton.setPreferredSize(new Dimension(100,48));
         writeButton.setBorderPainted(false);

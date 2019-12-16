@@ -120,6 +120,11 @@ public class MyGraphics
                 img.setRGB(x,y,0xffffff);
     }
 
+    public void clearShapes()
+    {
+        shapes.clear();
+    }
+
     public void panelSync() {originalGraphics.drawImage(img,0,0,null);}
 
     private void drawPixel(int x,int y)
@@ -698,7 +703,10 @@ public class MyGraphics
         Point[] ps=new Point[v.size()];
         for(int i=0;i<v.size();i++)
             ps[i]=v.get(i);
-        drawCurveBezier(ELEMENT,ps);
+        if(Main_GUI.CURVE_ALGORITHM.equals("Bezier"))
+            drawCurveBezier(ELEMENT,ps);
+        else
+            drawCurveBspline(ELEMENT,ps);
     }
 
     public void drawCurveBezierWrapper_Vector_Point(Vector<Point> v,Point p)
@@ -707,7 +715,10 @@ public class MyGraphics
         for(int i=0;i<v.size();i++)
             ps[i]=v.get(i);
         ps[v.size()]=p;
-        drawCurveBezier(ELEMENT,ps);
+        if(Main_GUI.CURVE_ALGORITHM.equals("Bezier"))
+            drawCurveBezier(ELEMENT,ps);
+        else
+            drawCurveBspline(ELEMENT,ps);
     }
 
 
@@ -1083,7 +1094,7 @@ public class MyGraphics
             }
             else if(p[i]>0)//从内部到外部
             {
-                u1=Math.max(u1,u);
+                u1=Math.min(u1,u);
                 if(u0>u1)
                     isOut=true;
             }

@@ -1,9 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 public class Main {
+    private static final boolean TEST=true;
     public static void main(String[] args)
     {
         //简单布局
@@ -30,7 +29,18 @@ public class Main {
         p.addMouseListener(mml);
 
         //设置打开文件+读取命令+解析完成命令
-        mml.inputCommands("input.txt");
+
+        if(!TEST)
+            mml.inputCommands(args[1]);
+        else
+        {
+            mml.inputCommands("tests/test_rotate.txt");
+            mml.inputCommands("tests/test_line_Bresenham.txt");
+            mml.inputCommands("tests/test_line_DDA.txt");
+            mml.inputCommands("tests/test_clip.txt");
+            mml.inputCommands("tests/test_scale.txt");
+            System.exit(0);
+        }
 
     }
 }

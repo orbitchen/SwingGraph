@@ -3,9 +3,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
 
 public class MyMouseListener implements MouseMotionListener,MouseListener {
 
@@ -79,6 +80,7 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
                 printError(token,3,i);
                 mg.resize(Integer.parseInt(token[1]),Integer.parseInt(token[2]));
                 mg.clear();
+                mg.clearShapes();
             }
             else if(token[0].equals("saveCanvas"))
             {

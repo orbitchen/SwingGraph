@@ -2,6 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Main_GUI {
+    public static String CURVE_ALGORITHM="BSpline";
     public static void main(String[] args)
     {
         config.x_bias=64;
@@ -13,7 +14,7 @@ public class Main_GUI {
         f.setResizable(true);
         f.setSize(1280,768);
         f.setMinimumSize(new Dimension(800,600));
-        f.setMaximumSize(new Dimension(3840,2160));
+        f.setMaximumSize(new Dimension(3840,2160));//最大4k
         //f.setBackground(Color.PINK);
         //f.setLayout(new BorderLayout());
         f.setLayout(new BorderLayout());
