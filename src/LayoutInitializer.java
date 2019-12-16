@@ -26,9 +26,8 @@ public class LayoutInitializer {
 
     private String getProperString(String a)
     {
-
+        //发现UTF8其实是跨平台的。
         return a;
-
     }
 
     private void handleFrame()
