@@ -1,5 +1,6 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.plaf.ButtonUI;
 import java.awt.*;
@@ -19,7 +20,7 @@ public class LayoutInitializer {
 
     private JPanel controller;
 
-    private final Color globalColor=Color.GRAY;
+    private final Color globalColor=new Color(200,220,240);
 
     public LayoutInitializer(JFrame f)
     {
@@ -30,7 +31,11 @@ public class LayoutInitializer {
     private void handleFrame()
     {
         controller=new JPanel();
+        controller.setBorder(BorderFactory.createEtchedBorder());
         controller.setPreferredSize(new Dimension(0,64));
+        //controller.setMinimumSize(new Dimension(0,64));
+        //controller.setMaximumSize(new Dimension(0,64));
+        //controller.setSize(0,64);
         controller.setBackground(globalColor);
         controller.setLayout(new FlowLayout());
 
@@ -149,7 +154,7 @@ public class LayoutInitializer {
         controller.add(buttonSelectColor);
 
 
-        frame.add(controller, BorderLayout.CENTER);
+        frame.add(controller,BorderLayout.SOUTH);
     }
 
     private void initButtonColor(JButton b,Color c,JPanel controller)

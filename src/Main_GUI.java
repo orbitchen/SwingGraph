@@ -11,20 +11,24 @@ public class Main_GUI {
         f.setTitle("伪 · 画图");
         f.setLayout(null);
         f.setResizable(true);
-        f.setSize(1280,1024);
+        f.setSize(1280,768);
+        f.setMinimumSize(new Dimension(800,600));
+        f.setMaximumSize(new Dimension(3840,2160));
         //f.setBackground(Color.PINK);
+        //f.setLayout(new BorderLayout());
         f.setLayout(new BorderLayout());
-
 
         //初始化界面
         LayoutInitializer li=new LayoutInitializer(f);
 
         JPanel p=new JPanel();
         //p.setSize(1280,800);
-        p.setPreferredSize(new Dimension(1280,700));
+        //p.setMinimumSize(new Dimension(800,600-64));
+        //p.setPreferredSize(new Dimension(800,600));
         p.setBackground(Color.WHITE);
-        f.add(p,BorderLayout.NORTH);
+        f.add(p,BorderLayout.CENTER);
 
+        //f.pack();
         f.setVisible(true);
         Graphics g=p.getGraphics();
 
