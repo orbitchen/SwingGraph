@@ -1,0 +1,33 @@
+resetCanvas 800 800
+drawLine 1 400 400 500 500 DDA
+saveCanvas res_rotate_line_before
+rotate 1 400 400 45
+saveCanvas res_rotate_line_after1
+rotate 1 400 400 90
+saveCanvas res_rotate_line_after2
+rotate 1 400 400 180
+saveCanvas res_rotate_line_after3
+rotate 1 400 400 45
+saveCanvas res_rotate_line_after4
+drawCurve 2 4 Bezier
+300 300 500 500 500 300 300 500
+saveCanvas res_rotate_curve1_before
+rotate 2 400 400 45
+saveCanvas res_rotate_curve1_after1
+rotate 2 400 400 90
+saveCanvas res_rotate_curve1_after2
+rotate 2 400 400 180
+saveCanvas res_rotate_curve1_after3
+rotate 2 400 400 45
+saveCanvas res_rotate_curve1_after4
+drawCurve 3 4 B-spline
+300 300 500 500 500 300 300 500
+saveCanvas res_rotate_curve2_before
+rotate 3 400 400 45
+saveCanvas res_rotate_curve2_after1
+rotate 3 400 400 90
+saveCanvas res_rotate_curve2_after2
+rotate 3 400 400 180
+saveCanvas res_rotate_curve2_after3
+rotate 3 400 400 45
+saveCanvas res_rotate_curve2_after4

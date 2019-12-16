@@ -1,0 +1,14 @@
+resetCanvas 800 800
+setColor 255 0 0
+drawLine 1 400 400 600 700 DDA
+drawLine 2 400 400 600 500 DDA
+drawLine 3 400 400 600 300 DDA
+drawLine 4 400 400 600 100 DDA
+saveCanvas res_line_DDA_1
+resetCanvas 800 800
+setColor 0 255 0
+drawLine 5 400 400 200 700 DDA
+drawLine 6 400 400 200 500 DDA
+drawLine 7 400 400 200 300 DDA
+drawLine 8 400 400 200 100 DDA
+saveCanvas res_line_DDA_2

@@ -1,0 +1,12 @@
+resetCanvas 800 800
+setColor 0 0 255
+drawLine 1 300 500 500 300 DDA
+saveCanvas res_scale_line_before
+scale 1 500 500 2
+saveCanvas res_scale_line_after
+resetCanvas 800 800
+drawCurve 1 3 Bezier
+300 500 500 300 600 600
+saveCanvas res_scale_curve_before
+scale 1 500 500 1.44
+saveCanvas res_scale_curve_after

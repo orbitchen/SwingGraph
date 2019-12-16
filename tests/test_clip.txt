@@ -1,0 +1,23 @@
+resetCanvas 800 800
+setColor 0 0 0
+drawLine 1 200 200 600 600 DDA
+drawLine 2 200 600 600 200 Bresenham
+drawLine 3 200 400 600 400 DDA
+drawLine 4 400 200 400 600 Bresenham
+saveCanvas res_clip_before
+clip 1 300 300 500 500 Cohen-Sutherland
+clip 2 300 300 500 500 Cohen-Sutherland
+clip 3 300 300 500 500 Cohen-Sutherland
+clip 4 300 300 500 500 Cohen-Sutherland
+saveCanvas res_clip_CS
+resetCanvas 800 800
+drawLine 1 200 200 600 600 DDA
+drawLine 2 200 600 600 200 Bresenham
+drawLine 3 200 400 600 400 DDA
+drawLine 4 400 200 400 600 Bresenham
+clip 1 300 300 500 500 Liang-Barsky
+clip 2 300 300 500 500 Liang-Barsky
+clip 3 300 300 500 500 Liang-Barsky
+clip 4 300 300 500 500 Liang-Barsky
+saveCanvas res_clip_LB
+
