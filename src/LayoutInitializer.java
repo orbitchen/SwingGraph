@@ -1,13 +1,7 @@
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.BevelBorder;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.plaf.ButtonUI;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -16,7 +10,9 @@ public class LayoutInitializer {
 
     private JButton readButton,writeButton;
     private JButton penPencil,penLine,penCircle,penRectangle,penDelete,penCurve;
-    private JButton buttonColor,buttonWhite,buttonBlack,buttonRed,buttonGreen,buttonBlue,buttonSelectColor;
+    private JButton buttonColor,buttonWhite,buttonBlack,buttonRed,buttonGreen,buttonBlue;
+    private JLabel labelRed,labelGreen,labelBlue;
+    private JTextField textRed,textGreen,textBlue;
 
     private JPanel controller;
 
@@ -146,12 +142,25 @@ public class LayoutInitializer {
         blank3.setEnabled(false);
         controller.add(blank3);
 
+        labelRed=new JLabel();labelRed.setText("R:");labelRed.setForeground(Color.BLACK);
+        labelGreen=new JLabel();labelGreen.setText("G:");labelGreen.setForeground(Color.BLACK);
+        labelBlue=new JLabel();labelBlue.setText("B");labelBlue.setForeground(Color.BLACK);
+        textRed=new JTextField();textRed.setPreferredSize(new Dimension(40,20));textRed.setText("0");
+        textBlue=new JTextField();textBlue.setPreferredSize(new Dimension(40,20));textBlue.setText("0");
+        textGreen=new JTextField();textGreen.setPreferredSize(new Dimension(40,20));textGreen.setText("0");
+
+        controller.add(labelRed);controller.add(textRed);
+        controller.add(labelGreen);controller.add(textGreen);
+        controller.add(labelBlue);controller.add(textBlue);
+
+        /*
         buttonSelectColor=new JButton();
         buttonSelectColor.setText("自选颜色");
         buttonSelectColor.setSize(100,48);
         buttonSelectColor.setPreferredSize(new Dimension(100,48));
         buttonSelectColor.setBorderPainted(false);
         controller.add(buttonSelectColor);
+         */
 
 
         frame.add(controller,BorderLayout.SOUTH);
@@ -172,11 +181,13 @@ public class LayoutInitializer {
     public void setListeners(MyMouseListener mml)
     {
 
+
         buttonGreen.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 mml.mg.setColor(0,255,0);
                 buttonColor.setBackground(Color.GREEN);
+                textRed.setText("0");textGreen.setText("255");textBlue.setText("0");
             }
         });
 
@@ -185,6 +196,7 @@ public class LayoutInitializer {
             public void actionPerformed(ActionEvent actionEvent) {
                 mml.mg.setColor(255,0,0);
                 buttonColor.setBackground(Color.RED);
+                textRed.setText("255");textGreen.setText("0");textBlue.setText("0");
             }
         });
 
@@ -193,6 +205,7 @@ public class LayoutInitializer {
             public void actionPerformed(ActionEvent actionEvent) {
                 mml.mg.setColor(0,0,255);
                 buttonColor.setBackground(Color.BLUE);
+                textRed.setText("0");textGreen.setText("0");textBlue.setText("255");
             }
         });
 
@@ -201,6 +214,7 @@ public class LayoutInitializer {
             public void actionPerformed(ActionEvent actionEvent) {
                 mml.mg.setColor(0,0,0);
                 buttonColor.setBackground(Color.BLACK);
+                textRed.setText("0");textGreen.setText("0");textBlue.setText("0");
             }
         });
 
@@ -209,6 +223,7 @@ public class LayoutInitializer {
             public void actionPerformed(ActionEvent actionEvent) {
                 mml.mg.setColor(255,255,255);
                 buttonColor.setBackground(Color.WHITE);
+                textRed.setText("255");textGreen.setText("255");textBlue.setText("255");
             }
         });
 
@@ -252,6 +267,66 @@ public class LayoutInitializer {
             @Override
             public void actionPerformed(ActionEvent actionEvent) { mml.setPenMode(MyMouseListener.MODE_CURVE);}
         });
+
+        JTextField[] texts=new JTextField[3];
+        texts[0]=textRed;texts[1]=textGreen;texts[2]=textBlue;
+        KeyAdapter textKeyAdapter=new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyChar()==KeyEvent.VK_ENTER)
+                {
+                    for(int i=0;i<3;i++)
+                    {
+                        if(!isNumber(texts[i].getText()))
+                            texts[i].setText("0");
+                    }
+
+                    for(int i=0;i<3;i++)
+                    {
+                        if(Integer.parseInt(texts[i].getText())<0)
+                            texts[i].setText("0");
+                        if(Integer.parseInt(texts[i].getText())>255)
+                            texts[i].setText("255");
+                    }
+
+                    mml.mg.setColor(Integer.parseInt(textRed.getText()),Integer.parseInt(textGreen.getText()),Integer.parseInt(textBlue.getText()));
+                    buttonColor.setBackground(new Color(Integer.parseInt(textRed.getText()),Integer.parseInt(textGreen.getText()),Integer.parseInt(textBlue.getText())));
+                }
+            }
+        };
+
+        FocusListener textFocusListener=new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent focusEvent) {
+
+            }
+
+            @Override
+            public void focusLost(FocusEvent focusEvent) {
+                for(int i=0;i<3;i++)
+                {
+                    if(!isNumber(texts[i].getText()))
+                        texts[i].setText("0");
+                }
+
+                for(int i=0;i<3;i++)
+                {
+                    if(Integer.parseInt(texts[i].getText())<0)
+                        texts[i].setText("0");
+                    if(Integer.parseInt(texts[i].getText())>255)
+                        texts[i].setText("255");
+                }
+
+                mml.mg.setColor(Integer.parseInt(textRed.getText()),Integer.parseInt(textGreen.getText()),Integer.parseInt(textBlue.getText()));
+                buttonColor.setBackground(new Color(Integer.parseInt(textRed.getText()),Integer.parseInt(textGreen.getText()),Integer.parseInt(textBlue.getText())));
+            }
+        };
+
+        for(int i=0;i<3;i++)
+        {
+            texts[i].addFocusListener(textFocusListener);
+            texts[i].addKeyListener(textKeyAdapter);
+        }
 
         readButton.addActionListener(new ActionListener() {
             @Override
@@ -347,5 +422,14 @@ public class LayoutInitializer {
                 }
             }
         });
+    }
+
+    private boolean isNumber(String a)
+    {
+        if(a.isEmpty()) return false;
+       for(char c:a.toCharArray())
+           if(!Character.isDigit(c))
+               return false;
+           return true;
     }
 }
