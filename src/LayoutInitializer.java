@@ -24,6 +24,13 @@ public class LayoutInitializer {
         handleFrame();
     }
 
+    private String getProperString(String a)
+    {
+
+        return a;
+
+    }
+
     private void handleFrame()
     {
         controller=new JPanel();
@@ -36,14 +43,14 @@ public class LayoutInitializer {
         controller.setLayout(new FlowLayout());
 
         readButton=new JButton();
-        readButton.setText("读取文件");
+        readButton.setText("Read File");
         readButton.setSize(100,48);
         readButton.setPreferredSize(new Dimension(100,48));
         readButton.setBorderPainted(false);
         controller.add(readButton);
 
         writeButton=new JButton();
-        writeButton.setText("保存文件");
+        writeButton.setText("Write File");
         writeButton.setSize(100,48);
         writeButton.setPreferredSize(new Dimension(100,48));
         writeButton.setBorderPainted(false);
@@ -57,43 +64,44 @@ public class LayoutInitializer {
         blank0.setEnabled(false);
         controller.add(blank0);
 
+
         penPencil=new JButton();
-        penPencil.setText("铅笔");
+        penPencil.setText("Pencil");
         penPencil.setSize(60,48);
         penPencil.setPreferredSize(new Dimension(60,48));
         penPencil.setBorderPainted(false);
         controller.add(penPencil);
 
         penLine=new JButton();
-        penLine.setText("直线");
+        penLine.setText("Line");
         penLine.setSize(60,48);
         penLine.setPreferredSize(new Dimension(60,48));
         penLine.setBorderPainted(false);
         controller.add(penLine);
 
         penCircle=new JButton();
-        penCircle.setText("椭圆");
+        penCircle.setText("Eclipse");
         penCircle.setSize(60,48);
         penCircle.setPreferredSize(new Dimension(60,48));
         penCircle.setBorderPainted(false);
         controller.add(penCircle);
 
         penRectangle=new JButton();
-        penRectangle.setText("矩形");
+        penRectangle.setText("Rectangle");
         penRectangle.setSize(60,48);
         penRectangle.setPreferredSize(new Dimension(60,48));
         penRectangle.setBorderPainted(false);
         controller.add(penRectangle);
 
         penDelete=new JButton();
-        penDelete.setText("橡皮");
+        penDelete.setText("Rubber");
         penDelete.setSize(60,48);
         penDelete.setPreferredSize(new Dimension(60,48));
         penDelete.setBorderPainted(false);
         controller.add(penDelete);
 
         penCurve=new JButton();
-        penCurve.setText("曲线");
+        penCurve.setText("Curve");
         penCurve.setSize(60,48);
         penCurve.setPreferredSize(new Dimension(60,48));
         penCurve.setBorderPainted(false);
