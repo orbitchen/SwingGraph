@@ -2,7 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Main_GUI {
-    public static String CURVE_ALGORITHM="BSpline";
+    public static String CURVE_ALGORITHM="Bspline";
+    public static final String BSPLINE_ALGORITHM="Matrix";
     public static void main(String[] args)
     {
         config.x_bias=64;

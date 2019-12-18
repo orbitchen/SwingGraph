@@ -671,13 +671,15 @@ public class MyGraphics
         if(p.length<2)
             return;//画不成
 
-        double[] xarray=new double[p.length-1];
-        double[] yarray=new double[p.length-1];
+        double[] xarray=new double[p.length];
+        double[] yarray=new double[p.length];
         double x,y;
         x=p[0].x;y=p[0].y;
 
+
         for(double t=0;t<=1;t+=0.05/p.length) {
             //步长可以调整
+            /*
             for (int i = 1; i < p.length; i++) {
                 for (int j = 0; j < p.length - i; j++) {
                     if (i == 1) {
@@ -688,6 +690,16 @@ public class MyGraphics
                         xarray[j] = xarray[j] * (1 - t) + xarray[j + 1] * t;
                         yarray[j] = yarray[j] * (1 - t) + yarray[j + 1] * t;
                     }
+                }
+            }
+            */
+            //上述费解的算法。下方简洁一些。
+            for(int k=0;k<p.length;k++){
+                xarray[k]=p[k].x;yarray[k]=p[k].y;}
+            for(int i=1;i<p.length;i++){
+                for(int j=0;j<p.length-i;j++){
+                    xarray[j]=(1-t)*xarray[j]+t*xarray[j+1];
+                    yarray[j]=(1-t)*yarray[j]+t*yarray[j+1];
                 }
             }
             drawLineDDA_noSync(ELEMENT, (int) x, (int) y, (int) xarray[0], (int) yarray[0]);
@@ -721,6 +733,22 @@ public class MyGraphics
             drawCurveBspline(ELEMENT,ps);
     }
 
+    private double bspline_B(double[] U,double u,int i,int k)
+    {
+        if(k==1)
+        {
+            if(U[i]<u&&u<U[i+1])
+                return 1;
+            return 0;
+        }
+        double res=0;
+        if(i+k-1!=i)
+            res+=(u-U[i])/(U[i+k-1]-U[i])*bspline_B(U,u,i,k-1);
+        if(i+k!=i+1)
+            res+=(U[i+k]-u)/(U[i+k]-U[i+1])*bspline_B(U,u,i+1,k-1);
+        return res;
+    }
+
 
     public void drawCurveBspline(int id,Point[] p)
     {
@@ -733,39 +761,81 @@ public class MyGraphics
         }
 
         //TODO:只需要考虑三次均匀曲线
+        if(Main_GUI.BSPLINE_ALGORITHM.equals("Matrix")) {
+            double[][] M4_pre = new double[4][4];
+            M4_pre[0][0] = 1.0D;
+            M4_pre[0][1] = 4.0D;
+            M4_pre[0][2] = 1.0D;
+            M4_pre[0][3] = 0.0D;
+            M4_pre[1][0] = -3.0D;
+            M4_pre[1][1] = 0.0D;
+            M4_pre[1][2] = 3.0D;
+            M4_pre[1][3] = 0.0D;
+            M4_pre[2][0] = 3.0D;
+            M4_pre[2][1] = -6.0D;
+            M4_pre[2][2] = 3.0D;
+            M4_pre[2][3] = 0.0D;
+            M4_pre[3][0] = -1.0D;
+            M4_pre[3][1] = 3.0D;
+            M4_pre[3][2] = -3.0D;
+            M4_pre[3][3] = 1.0D;
+            Matrix M4 = new Matrix(M4_pre);
+            M4 = M4.times(0.16666666666666666D);
+            boolean init = true;
+            int x = 0;
+            int y = 0;
 
-        double[][] M4_pre=new double[4][4];
-        M4_pre[0][0]=1;M4_pre[0][1]=4;M4_pre[0][2]=1;M4_pre[0][3]=0;
-        M4_pre[1][0]=-3;M4_pre[1][1]=0;M4_pre[1][2]=3;M4_pre[1][3]=0;
-        M4_pre[2][0]=3;M4_pre[2][1]=-6;M4_pre[2][2]=3;M4_pre[2][3]=0;
-        M4_pre[3][0]=-1;M4_pre[3][1]=3;M4_pre[3][2]=-3;M4_pre[3][3]=1;
-        Matrix M4=new Matrix(M4_pre);
-        M4=M4.times(1.0/6.0);
+            for(int i = 0; i < p.length - 3; ++i) {
+                double[][] d_pre = new double[][]{{(double)p[i].x, (double)p[i].y}, {(double)p[i + 1].x, (double)p[i + 1].y}, {(double)p[i + 2].x, (double)p[i + 2].y}, {(double)p[i + 3].x, (double)p[i + 3].y}};
+                Matrix d = new Matrix(d_pre);
 
-        boolean init=true;
-        int x=0;int y=0;
-
-        for(int i=0;i<p.length-3;i++)
+                for(double t = 0.0D; t <= 1.0D; t += 0.0078125D) {
+                    double[][] t_pre = new double[][]{{1.0D, t, t * t, t * t * t}};
+                    Matrix t_matrix = new Matrix(t_pre);
+                    Matrix result = t_matrix.times(M4);
+                    result = result.times(d);
+                    if (init) {
+                        x = (int)result.get(0, 0);
+                        y = (int)result.get(0, 1);
+                        init = false;
+                    } else {
+                        this.drawLineDDA_noSync(-1, x, y, (int)result.get(0, 0), (int)result.get(0, 1));
+                        x = (int)result.get(0, 0);
+                        y = (int)result.get(0, 1);
+                    }
+                }
+            }
+        }
+        else
         {
-            double[][] d_pre={{p[i].x,p[i].y},{p[i+1].x,p[i+1].y},{p[i+2].x,p[i+2].y},{p[i+3].x,p[i+3].y}};
-            Matrix d=new Matrix(d_pre);
-            for(double t=0;t<=1;t+=1.0/128.0)
+            int k=4;
+            int n=p.length-1;
+            double[] U=new double[n+k+1];
+            for(int i=0;i<U.length;i++)
+                U[i]=i;
+
+            boolean begin=true;
+            int x_saved=0,y_saved=0;
+            for(double u=U[k-1];u<=U[n+1];u+=1.0/128.0)
             {
-                double[][] t_pre={{1,t,t*t,t*t*t}};
-                Matrix t_matrix=new Matrix(t_pre);
-                Matrix result=t_matrix.times(M4);
-                result=result.times(d);
-                if(init)
+                double x=0;double y=0;
+                for(int i=0;i<p.length;i++)
                 {
-                    x=(int)result.get(0,0);
-                    y=(int)result.get(0,1);
-                    init=false;
+                    double ratio=bspline_B(U,u,i,k);
+                    x+=p[i].x*ratio;
+                    y+=p[i].y*ratio;
+                }
+                if(x==0&&y==0)
+                    continue;
+                if(begin)
+                {
+                    x_saved=(int)x;y_saved=(int)y;
+                    begin=false;
                 }
                 else
                 {
-                    drawLineDDA_noSync(ELEMENT,x,y,(int)result.get(0,0),(int)result.get(0,1));
-                    x=(int)result.get(0,0);
-                    y=(int)result.get(0,1);
+                    drawLineDDA_noSync(ELEMENT,x_saved,y_saved,(int)x,(int)y);
+                    x_saved=(int)x;y_saved=(int)y;
                 }
             }
 

@@ -11,7 +11,6 @@ public class LayoutInitializer {
     private JButton readButton,writeButton;
     private JButton penPencil,penLine,penCircle,penRectangle,penDelete,penCurve;
     private JButton buttonColor,buttonWhite,buttonBlack,buttonRed,buttonGreen,buttonBlue;
-    private JLabel labelRed,labelGreen,labelBlue;
     private JTextField textRed,textGreen,textBlue;
 
     private JPanel controller;
@@ -149,9 +148,15 @@ public class LayoutInitializer {
         blank3.setEnabled(false);
         controller.add(blank3);
 
-        labelRed=new JLabel();labelRed.setText("R:");labelRed.setForeground(Color.BLACK);
-        labelGreen=new JLabel();labelGreen.setText("G:");labelGreen.setForeground(Color.BLACK);
-        labelBlue=new JLabel();labelBlue.setText("B");labelBlue.setForeground(Color.BLACK);
+        JLabel labelRed = new JLabel();
+        labelRed.setText("R:");
+        labelRed.setForeground(Color.BLACK);
+        JLabel labelGreen = new JLabel();
+        labelGreen.setText("G:");
+        labelGreen.setForeground(Color.BLACK);
+        JLabel labelBlue = new JLabel();
+        labelBlue.setText("B");
+        labelBlue.setForeground(Color.BLACK);
         textRed=new JTextField();textRed.setPreferredSize(new Dimension(40,20));textRed.setText("0");
         textBlue=new JTextField();textBlue.setPreferredSize(new Dimension(40,20));textBlue.setText("0");
         textGreen=new JTextField();textGreen.setPreferredSize(new Dimension(40,20));textGreen.setText("0");
