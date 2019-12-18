@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Main_GUI {
-    public static String CURVE_ALGORITHM="Bspline";
+    public static String CURVE_ALGORITHM="Bezier";
     public static final String BSPLINE_ALGORITHM="Matrix";
     public static void main(String[] args)
     {

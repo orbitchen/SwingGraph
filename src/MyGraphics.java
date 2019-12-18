@@ -826,7 +826,7 @@ public class MyGraphics
                     y+=p[i].y*ratio;
                 }
                 if(x==0&&y==0)
-                    continue;
+                    continue;//当u为整数时一定为0 排除这种情况
                 if(begin)
                 {
                     x_saved=(int)x;y_saved=(int)y;
