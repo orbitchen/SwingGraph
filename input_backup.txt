@@ -15,6 +15,7 @@ drawPolygon 666 6 DDA
 44 22 73 30 74 77 59 56 32 63 25 49
 saveCanvas output_5
 rotate 666 59 56 -90
+saveCanvas output_debug
 translate 666 -8 -18
 saveCanvas output_6
 resetCanvas 160 100

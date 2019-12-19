@@ -179,6 +179,7 @@ public class MyGraphics
     public void drawLineDDA(int id,int x1,int y1,int x2,int y2)
     {
         print("drawLineDDA");
+
         if(id!=ELEMENT)
         {
             Shape s=new Shape();
@@ -891,6 +892,8 @@ public class MyGraphics
         //TODO:平移，之后要更改原坐标。
         //所有的图元都要支持平移
         Shape s=shapes.get(id);
+        Color savedColor=getColor();
+        setColor(s.color.getRed(),s.color.getGreen(),s.color.getBlue());
 
         if(s.type==Shape.LINE) {
             s.location[0].x+=dx;
@@ -929,14 +932,16 @@ public class MyGraphics
             else
                 drawCurveBspline(ELEMENT, s.location);
         }
+
+        setColor(savedColor.getRed(),savedColor.getGreen(),savedColor.getBlue());
     }
 
     private void rotatePoint(int x, int y, double arc, Point p)
     {
         int x0=p.x;
         int y0=p.y;
-        p.x=(int)(x+(x0-x)*Math.cos(arc)-(y0-y)*Math.sin(arc));
-        p.y=(int)(y+(x0-x)*Math.sin(arc)+(y0-y)*Math.cos(arc));
+        p.x=(int)((double)x+((double)x0-(double)x)*Math.cos(arc)-((double)y0-(double)y)*Math.sin(arc));
+        p.y=(int)((double)y+((double)x0-(double)x)*Math.sin(arc)+((double)y0-(double)y)*Math.cos(arc));
     }
 
     public void rotate(int id,int x,int y,int r)
@@ -949,11 +954,15 @@ public class MyGraphics
         //除了椭圆之外都要支持旋转
         //x y为旋转中心，r为顺时针旋转角度
         Shape s=shapes.get(id);
+
         if(s==null)
         {
             System.out.println("旋转时发生错误：图元不存在。");
             return;
         }
+
+        Color savedColor=getColor();
+        setColor(s.color.getRed(),s.color.getGreen(),s.color.getBlue());
 
         double arc=(Math.PI/180)*r;
 
@@ -982,12 +991,14 @@ public class MyGraphics
         else if(s.type==Shape.POLYGON)
         {
             for(int i=0;i<s.location.length;i++)
-                rotatePoint(x,y,arc,s.location[0]);
+                rotatePoint(x,y,arc,s.location[i]);
             if(s.algorithm.equals("DDA"))
                 drawPolygonDDA(ELEMENT,s.location);
             else
                 drawPolygonBresenham(ELEMENT,s.location);
         }
+
+        setColor(savedColor.getRed(),savedColor.getGreen(),savedColor.getBlue());
     }
 
     private void scalePoint(int x,int y,float ratio,Point p)
@@ -1006,6 +1017,9 @@ public class MyGraphics
         //所有的图元都要支持缩放
         Shape s=shapes.get(id);
         if(s==null){System.out.println("缩放时发生错误：图元不存在。");}
+
+        Color savedColor=getColor();
+        setColor(s.color.getRed(),s.color.getGreen(),s.color.getBlue());
 
         if(s.type==Shape.LINE)
         {
@@ -1028,18 +1042,20 @@ public class MyGraphics
         else if(s.type==Shape.OVAL)
         {
             scalePoint(x,y,ratio,s.location[0]);
+            scalePoint(x,y,ratio,s.location[1]);
             drawOval(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
         }
         else if(s.type==Shape.POLYGON)
         {
             for(int i=0;i<s.location.length;i++)
-                scalePoint(x,y,ratio,s.location[0]);
+                scalePoint(x,y,ratio,s.location[i]);
             if(s.algorithm.equals("DDA"))
                 drawPolygonDDA(ELEMENT,s.location);
             else
                 drawPolygonBresenham(ELEMENT,s.location);
         }
 
+        setColor(savedColor.getRed(),savedColor.getGreen(),savedColor.getBlue());
     }
 
 
@@ -1053,6 +1069,9 @@ public class MyGraphics
         if(s.type!=Shape.LINE){System.out.println("裁剪：试图对非线段进行裁剪");}
         clear();
         redrawExcept(id);
+
+        Color savedColor=getColor();
+        setColor(s.color.getRed(),s.color.getGreen(),s.color.getBlue());
 
         int up,down,left,right,in;
         up=1;down=2;left=4;right=8;in=0;
@@ -1086,6 +1105,10 @@ public class MyGraphics
                 break;
             }
 
+            double x0,y0,x1,y1;
+            x0=s.location[0].x;x1=s.location[1].x;
+            y0=s.location[0].y;y1=s.location[1].y;
+
             //有可能两个都在界外，也有可能只有一个在界外
             for(int i=0;i<2;i++)
             {
@@ -1093,23 +1116,27 @@ public class MyGraphics
                 {
                     if((code[i]&up)!=0){
                         s.location[i].y=y_max;
-                        s.location[i].x=s.location[0].x+(s.location[1].x-s.location[0].x)*(y_max-s.location[0].y)/(s.location[1].y-s.location[0].y);
+                        s.location[i].x=(int)((double)x0+((double)x1-(double)x0)*((double)y_max-(double)y0)/((double)y1-(double)y0));
+                        //s.location[i].x=s.location[1].x+(y_max-s.location[1].y)*(s.location[0].x-s.location[1].x)/(s.location[0].y-s.location[1].y);
 
                     }
                     else if((code[i]&down)!=0){
                         s.location[i].y=y_min;
-                        s.location[i].x=s.location[0].x+(s.location[1].x-s.location[0].x)*(y_min-s.location[0].y)/(s.location[1].y-s.location[0].y);
+                        s.location[i].x=(int)((double)x0+((double)x1-(double)x0)*((double)y_min-(double)y0)/((double)y1-(double)y0));
+                        //s.location[i].x=s.location[1].x+(y_min-s.location[1].y)*(s.location[0].x-s.location[1].x)/(s.location[0].y-s.location[1].y);
 
                     }
 
                     if((code[i]&right)!=0){
                         s.location[i].x=x_max;
-                        s.location[i].y=s.location[0].y+(s.location[1].y-s.location[0].y)*(x_max-s.location[0].x)/(s.location[1].x-s.location[0].x);
+                        s.location[i].y=(int)((double)y0+((double)y1-(double)y0)*((double)x_max-(double)x0)/((double)x1-(double)x0));
+                        //s.location[i].y=s.location[1].y+(x_max-s.location[1].x)*(s.location[0].y-s.location[1].y)/(s.location[0].x-s.location[1].x);
 
                     }
                     else if((code[i]&left)!=0){
                         s.location[i].x=x_min;
-                        s.location[i].y=s.location[0].y+(s.location[1].y-s.location[0].y)*(x_min-s.location[0].x)/(s.location[1].x-s.location[0].x);
+                        s.location[i].y=(int)((double)y0+((double)y1-(double)y0)*((double)x_min-(double)x0)/((double)x1-(double)x0));
+                        //s.location[i].y=s.location[1].y+(x_min-s.location[1].x)*(s.location[0].y-s.location[1].y)/(s.location[0].x-s.location[1].x);
 
                     }
                 }
@@ -1121,6 +1148,8 @@ public class MyGraphics
             drawLineDDA(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
         else
             drawLineBresenham(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
+
+        setColor(savedColor.getRed(),savedColor.getGreen(),savedColor.getBlue());
     }
 
     public void clipLiangBarsky(int id,int x_min,int y_min,int x_max,int y_max)
@@ -1133,6 +1162,9 @@ public class MyGraphics
         if(s.type!=Shape.LINE){System.out.println("裁剪：试图对非线段进行裁剪");}
         clear();
         redrawExcept(id);
+
+        Color savedColor=getColor();
+        setColor(s.color.getRed(),s.color.getGreen(),s.color.getBlue());
 
         int p[]=new int[4];
         int q[]=new int[4];
@@ -1192,11 +1224,18 @@ public class MyGraphics
         else
             drawLineBresenham(ELEMENT,s.location[0].x,s.location[0].y,s.location[1].x,s.location[1].y);
 
+        setColor(savedColor.getRed(),savedColor.getGreen(),savedColor.getBlue());
+
     }
 
     public void setColor(int r,int g,int b)
     {
         print("setColor");
         originalGraphics.setColor(new Color(r,g,b));
+    }
+
+    public Color getColor()
+    {
+        return originalGraphics.getColor();
     }
 }

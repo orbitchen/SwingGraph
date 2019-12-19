@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Main {
-    private static final boolean TEST=true;
+    private static final boolean TEST=false;
     public static void main(String[] args)
     {
         //简单布局
@@ -31,7 +31,7 @@ public class Main {
         //设置打开文件+读取命令+解析完成命令
 
         if(!TEST)
-            mml.inputCommands(args[1]);
+            mml.inputCommands(args[0]);
         else
         {
             mml.inputCommands("tests/test_rotate.txt");
