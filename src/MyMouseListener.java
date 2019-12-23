@@ -275,6 +275,7 @@ public class MyMouseListener implements MouseMotionListener,MouseListener {
         {
             System.out.println("MODE_CURVE_PRESS");
             curveBackGround=backGround;//保存曲线的背景图片
+            curvePoints.clear();
         }
         else if(penMode==MODE_CURVE_ING)
         {

@@ -362,6 +362,8 @@ public class LayoutInitializer {
                     boolean formatSupport=false;
                     for(int i=0;i<formats.length;i++)
                     {
+                        if(fs.split("\\.").length<2)
+                            break;
                         if(formats[i].equals(fs.split("\\.")[1]))
                             formatSupport=true;
                     }
@@ -406,6 +408,8 @@ public class LayoutInitializer {
                         boolean formatSupport=false;
                         for(int i=0;i<formats.length;i++)
                         {
+                            if(fs.split("\\.").length<2)
+                                break;
                             if(formats[i].equals(fs.split("\\.")[1])) {
                                 formatSupport = true;
                                 break;
